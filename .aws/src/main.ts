@@ -24,8 +24,7 @@ import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
 import { NullProvider } from '@cdktf/provider-null';
 
-//todo: change class name to your service name
-class Acme extends TerraformStack {
+class AnnotationsAPI extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
 
@@ -42,7 +41,7 @@ class Acme extends TerraformStack {
 
     const region = new DataAwsRegion(this, 'region');
     const caller = new DataAwsCallerIdentity(this, 'caller');
-    const cache = Acme.createElasticache(this);
+    const cache = AnnotationsAPI.createElasticache(this);
 
     const pocketApp = this.createPocketAlbApplication({
       pagerDuty: this.createPagerDuty(),
@@ -305,6 +304,6 @@ class Acme extends TerraformStack {
 }
 
 const app = new App();
-new Acme(app, 'acme');
+new AnnotationsAPI(app, 'annotations-api');
 // TODO: Fix the terraform version. @See https://github.com/Pocket/recommendation-api/pull/333
 app.synth();
