@@ -6,8 +6,7 @@ import xrayExpress from 'aws-xray-sdk-express';
 import express from 'express';
 import https from 'https';
 
-const serviceName = 'Acme';
-//todo: change service name
+const serviceName = 'annotations-api';
 
 //Set XRAY to just log if the context is missing instead of a runtime error
 AWSXRay.setContextMissingStrategy('LOG_ERROR');

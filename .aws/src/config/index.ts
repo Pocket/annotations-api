@@ -1,5 +1,5 @@
-const name = 'Acme'; //todo: change the service name, match shared infrastructure name
-const domainPrefix = 'acme';
+const name = 'AnnotationsAPI'; 
+const domainPrefix = 'annotations-api';
 const isDev = process.env.NODE_ENV === 'development';
 const environment = isDev ? 'Dev' : 'Prod';
 const domain = isDev
@@ -20,12 +20,12 @@ export const config = {
   isDev,
   prefix: `${name}-${environment}`,
   circleCIPrefix: `/${name}/CircleCI/${environment}`,
-  shortName: 'ACME', //change to your service name, limit to 6 characters, match shared-infrastructure short name
+  shortName: 'ANNOT',
   environment,
   domain,
   codePipeline: {
     githubConnectionArn,
-    repository: 'pocket/backend-typescript-template', //TODO: Change to your github repository before first deployment
+    repository: 'pocket/annotations-api',
     branch,
   },
   graphqlVariant,
@@ -34,7 +34,7 @@ export const config = {
   healthCheck: {
     command: [
       'CMD-SHELL',
-      'curl -f http://localhost:4001/.well-known/apollo/server-health || exit 1',
+      'curl -f http://localhost:4008/.well-known/apollo/server-health || exit 1',
     ],
     interval: 15,
     retries: 3,

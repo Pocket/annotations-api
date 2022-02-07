@@ -60,15 +60,14 @@ jobs:
             echo 'export PATH=$HOME/.rover/bin:$PATH' >> $BASH_ENV
       - run:
           name: check service
-          command: rover subgraph check pocket-client-api@current --schema ./schema.graphql --name=<UPDATE_ME>
+          command: rover subgraph check pocket-client-api@current --schema ./schema.graphql --name=annotations
       - when:
           condition:
             equal: [main, << pipeline.git.branch >>]
           steps:
             - run:
                 name: push service
-                # TODO: Update service name in apollo
-                command: rover subgraph publish pocket-client-api@current --schema ./schema.graphql --routing-url https://<UPDATE_ME>.readitlater.com/ --name=<UPDATE_ME>
+                command: rover subgraph publish pocket-client-api@current --schema ./schema.graphql --routing-url https://annotations-api.readitlater.com/ --name=annotations
   build:
     docker:
       - image: circleci/node:16
@@ -334,7 +333,6 @@ workflows:
           <<: *only_main
           name: sentry-release-notification-prod
           context: pocket
-      # TODO: Update me if repository name is not the same as construct name
           repository_name: Pocket/${CONSTRUCT_NAME}
           sentry_project_name: ${CONSTRUCT_NAME}
           sentry_env: production
@@ -348,7 +346,6 @@ workflows:
           <<: *only_dev
           name: sentry-release-notification-dev
           context: pocket
-      # TODO: Update me if repository name is not the same as construct name
           repository_name: Pocket/${CONSTRUCT_NAME}
           sentry_project_name: ${CONSTRUCT_NAME}
           sentry_env: development
