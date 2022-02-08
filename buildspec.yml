@@ -58,7 +58,7 @@ phases:
       - npm ci
       # synthesize the js into terraform json with the proper node environment
       - 'if [ "$GIT_BRANCH" == "$DEV_BRANCH" ]; then NODE_ENV=development npm run synth; else npm run synth; fi'
-      - cd cdktf.out/stacks/acme #TODO: Update this to match the synthesized terraform stack name in line 306 of .aws/main.ts
+      - cd cdktf.out/stacks/annotations-api
       - terraform init
   build:
     commands:

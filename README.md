@@ -1,9 +1,6 @@
-# Backend Starter repository
+# Annotations API
 
-This repository can be used as a template to spin up a new service. 
-
-Note: please change all reference to `Acme` to your service name. There are `Todo`s in this repository
-that points to name changes to your new service name, please address them before spinning up the service.
+This subgraph handles Annotations on SavedItems in a User's list.
 
 ## Folder structure
 - the infrastructure code is present in `.aws`
