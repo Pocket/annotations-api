@@ -3,7 +3,7 @@ import { getServer } from '../../server';
 import sinon from 'sinon';
 import { ContextManager } from '../../context';
 import { readClient } from '../../database/client';
-import { GET_HIGHLIGHTS } from './highlights.graphql';
+import { GET_HIGHLIGHTS, seedData } from './highlights-fixtures';
 
 describe('Highlights on a SavedItem', () => {
   let server: ApolloServer;
@@ -11,54 +11,13 @@ describe('Highlights on a SavedItem', () => {
   const userId = 1;
   const db = readClient();
   const now = new Date();
-  const seedData = {
-    user_annotations: [
-      {
-        // One highlight on an item
-        annotation_id: 1,
-        user_id: 1,
-        item_id: 1,
-        quote: "'We should rewrite it all,' said Pham.",
-        patch: 'patch1',
-        version: 1,
-        updated_at: now,
-        created_at: now,
-      },
-      {
-        // > 1 annotations on an item
-        annotation_id: 2,
-        user_id: 1,
-        item_id: 2,
-        quote:
-          'You and a thousand of your friends would have to work for a century or so to reproduce it.',
-        patch: 'patch2',
-        version: 1,
-        updated_at: now,
-        created_at: now,
-      },
-      {
-        annotation_id: 3,
-        user_id: 1,
-        item_id: 2,
-        quote: "The word for all this is 'mature programming environment.'",
-        patch: 'patch3',
-        version: 1,
-        updated_at: now,
-        created_at: now,
-      },
-    ],
-    list: [
-      { item_id: 1, user_id: 1 },
-      { item_id: 2, user_id: 1 },
-      { item_id: 3, user_id: 1 }, // no highlights
-    ],
-  };
+  const testData = seedData(now);
 
   beforeAll(async () => {
     await db('user_annotations').truncate();
     await db('list').truncate();
     await Promise.all(
-      Object.entries(seedData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data))
     );
     contextStub = sinon
       .stub(ContextManager.prototype, 'userId')
