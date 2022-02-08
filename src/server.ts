@@ -7,8 +7,10 @@ import {
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageDisabled,
 } from 'apollo-server-core';
+import { ContextManager } from './context';
+import { readClient, writeClient } from './database/client';
 
-export function startServer(): ApolloServer {
+export function getServer(): ApolloServer {
   return new ApolloServer({
     mocks: true,
     mockEntireSchema: true,
@@ -19,16 +21,10 @@ export function startServer(): ApolloServer {
         ? ApolloServerPluginLandingPageDisabled()
         : ApolloServerPluginLandingPageGraphQLPlayground(),
     ],
-    context: {
-      // Example request context. This context is accessible to all resolvers.
-      // Typically a new context object is created for every request.
-      // dataLoaders: {
-      //   itemIdLoader: itemIdLoader,
-      //   itemUrlLoader: itemUrlLoader,
-      // },
-      // repositories: {
-      //   itemResolver: getItemResolverRepository(),
-      // },
-    },
+    context: ({ req }) =>
+      new ContextManager({
+        request: req,
+        db: { readClient: readClient(), writeClient: writeClient() },
+      }),
   });
 }
