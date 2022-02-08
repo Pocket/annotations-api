@@ -7,11 +7,13 @@ import {
 } from 'cdktf';
 import {
   AwsProvider,
-  DataAwsCallerIdentity,
-  DataAwsKmsAlias,
-  DataAwsRegion,
-  DataAwsSnsTopic,
 } from '@cdktf/provider-aws';
+import {
+  DataAwsCallerIdentity,
+  DataAwsRegion,
+} from '@cdktf/provider-aws/lib/datasources'
+import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/sns';
+import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/kms';
 import { config } from './config';
 import {
   ApplicationRedis,
