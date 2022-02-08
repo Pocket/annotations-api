@@ -42,7 +42,7 @@ describe('Highlights on a SavedItem', () => {
       variables,
     });
   });
-  it('should return an array of all highlights associated with a SavedItem', async () => {
+  it('should return an array of all active (not-deleted) highlights associated with a SavedItem', async () => {
     const variables = { itemId: 2 };
     const res = await server.executeOperation({
       query: GET_HIGHLIGHTS,
