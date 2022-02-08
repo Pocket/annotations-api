@@ -14,6 +14,8 @@ const branch = isDev ? 'dev' : 'main';
 //Arbitrary size and count for cache. No logic was used in deciding this.
 const cacheNodes = isDev ? 2 : 2;
 const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
+const appPort = 4008;
+
 
 export const config = {
   name,
@@ -23,6 +25,7 @@ export const config = {
   shortName: 'ANNOT',
   environment,
   domain,
+  port: appPort,
   codePipeline: {
     githubConnectionArn,
     repository: 'pocket/annotations-api',
@@ -34,7 +37,7 @@ export const config = {
   healthCheck: {
     command: [
       'CMD-SHELL',
-      'curl -f http://localhost:4008/.well-known/apollo/server-health || exit 1',
+      `curl -f http://localhost:${appPort}/.well-known/apollo/server-health || exit 1`,
     ],
     interval: 15,
     retries: 3,
@@ -45,4 +48,8 @@ export const config = {
     service: name,
     environment,
   },
+  envVars: {
+    databasePort: '3306',
+    databaseTz: 'US/Central',
+  }
 };

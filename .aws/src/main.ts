@@ -180,6 +180,8 @@ class AnnotationsAPI extends TerraformStack {
       cache,
     } = dependencies;
 
+    const databaseSecretsArn = `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.name}/${config.environment}/READITLA_DB`;
+
     return new PocketALBApplication(this, 'application', {
       internal: true,
       prefix: config.prefix,
@@ -192,8 +194,8 @@ class AnnotationsAPI extends TerraformStack {
           name: 'app',
           portMappings: [
             {
-              hostPort: 4005,
-              containerPort: 4005,
+              hostPort: config.port,
+              containerPort: config.port,
             },
           ],
           healthCheck: config.healthCheck,
@@ -214,11 +216,47 @@ class AnnotationsAPI extends TerraformStack {
               name: 'REDIS_READER_ENDPOINT',
               value: cache.readerEndpoint,
             },
+            {
+              name: 'DATABASE_READ_PORT',
+              value: config.envVars.databasePort,
+            },
+            {
+              name: 'DATABASE_WRITE_PORT',
+              value: config.envVars.databasePort,
+            },
+            {
+              name: 'DATABASE_TZ',
+              value: config.envVars.databaseTz,
+            },
           ],
           secretEnvVars: [
             {
               name: 'SENTRY_DSN',
               valueFrom: `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}/SENTRY_DSN`,
+            },
+            {
+              name: 'DATABASE_READ_HOST',
+              valueFrom: `${databaseSecretsArn}:read_host::`,
+            },
+            {
+              name: 'DATABASE_READ_USER',
+              valueFrom: `${databaseSecretsArn}:read_username::`,
+            },
+            {
+              name: 'DATABASE_READ_PASSWORD',
+              valueFrom: `${databaseSecretsArn}:read_password::`,
+            },
+            {
+              name: 'DATABASE_WRITE_HOST',
+              valueFrom: `${databaseSecretsArn}:write_host::`,
+            },
+            {
+              name: 'DATABASE_WRITE_USER',
+              valueFrom: `${databaseSecretsArn}:write_username::`,
+            },
+            {
+              name: 'DATABASE_WRITE_PASSWORD',
+              valueFrom: `${databaseSecretsArn}:write_password::`,
             },
           ],
         },
@@ -242,7 +280,7 @@ class AnnotationsAPI extends TerraformStack {
       },
       exposedContainer: {
         name: 'app',
-        port: 4001,
+        port: 4008,
         healthCheckPath: '/.well-known/apollo/server-health',
       },
       ecsIamConfig: {
