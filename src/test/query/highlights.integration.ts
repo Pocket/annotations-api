@@ -12,6 +12,14 @@ describe('Highlights on a SavedItem', () => {
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
+  const expectedFields = [
+    'id',
+    'patch',
+    'version',
+    'quote',
+    '_createdAt',
+    '_updatedAt',
+  ];
 
   beforeAll(async () => {
     await db('user_annotations').truncate();

@@ -13,7 +13,7 @@ services:
     env_file:
       - ./.docker/local.env
     ports:
-      - '3309:3306'
+      - '3306:3306'
     volumes:
       - .docker/mysql/schema:/docker-entrypoint-initdb.d:delegated
     environment:
