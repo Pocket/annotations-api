@@ -14,8 +14,8 @@ import { readClient, writeClient } from './database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({
-    mocks: { Timestamp: () => '12345789' },
-    mockEntireSchema: true,
+    // mocks: { Timestamp: () => '12345789' },
+    // mockEntireSchema: true,
     schema: buildFederatedSchema([{ typeDefs, resolvers }]),
     plugins: [
       sentryPlugin,
