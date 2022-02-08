@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import config from './config';
-import { startServer } from './server';
+import { getServer } from './server';
 import AWSXRay from 'aws-xray-sdk-core';
 import xrayExpress from 'aws-xray-sdk-express';
 import express from 'express';
@@ -26,7 +26,7 @@ Sentry.init({
   debug: config.sentry.environment == 'development',
 });
 
-const server = startServer();
+const server = getServer();
 
 const app = express();
 
