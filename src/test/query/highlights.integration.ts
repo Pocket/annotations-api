@@ -22,14 +22,13 @@ describe('Highlights on a SavedItem', () => {
   ];
 
   beforeAll(async () => {
-    await db('user_annotations').truncate();
-    await db('list').truncate();
+    await Promise.all(
+      Object.keys(testData).map((table) => db(table).truncate())
+    );
     await Promise.all(
       Object.entries(testData).map(([table, data]) => db(table).insert(data))
     );
-    contextStub = sinon
-      .stub(ContextManager.prototype, 'userId')
-      .returns(userId);
+    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
     server = getServer();
   });
   afterAll(() => {
@@ -41,6 +40,17 @@ describe('Highlights on a SavedItem', () => {
       query: GET_HIGHLIGHTS,
       variables,
     });
+
+    // const expectedAnnotations = {
+    //   highlights: [{ id: '1', quote: 'abc' }],
+    // };
+
+    const annotations = res?.data?._entities[0].annotations.highlights;
+
+    expect(res).toBeTruthy();
+    expect(annotations).toHaveLength(1);
+    //
+    // {data: {_entities: [{annotations: {highlights: [{id: etc.}]}}, {}]}}
   });
   it('should return an array of all active (not-deleted) highlights associated with a SavedItem', async () => {
     const variables = { itemId: 2 };
@@ -48,6 +58,14 @@ describe('Highlights on a SavedItem', () => {
       query: GET_HIGHLIGHTS,
       variables,
     });
+    // const expectedAnnotations = {
+    //   highlights: [{ id: '1', quote: 'abc' }],
+    // };
+
+    const annotations = res?.data?._entities[0].annotations.highlights;
+
+    expect(res).toBeTruthy();
+    expect(annotations).toHaveLength(2);
   });
   it(`should throw NOT_FOUND error when the ItemId is not in the User's list`, async () => {
     const variables = { itemId: 999 };
@@ -55,6 +73,9 @@ describe('Highlights on a SavedItem', () => {
       query: GET_HIGHLIGHTS,
       variables,
     });
+    expect(res.errors).toBeTruthy();
+    expect(res.errors).toHaveLength(1);
+    // expect(res.errors[0].extensions?.code).toEqual('NOT_FOUND');
   });
   it('should return an empty Highlights array if there are no highlights on a SavedItem', async () => {
     const variables = { itemId: 3 };
@@ -62,5 +83,10 @@ describe('Highlights on a SavedItem', () => {
       query: GET_HIGHLIGHTS,
       variables,
     });
+
+    const annotations = res?.data?._entities[0].annotations?.highlights;
+
+    expect(res).toBeTruthy();
+    expect(annotations).toHaveLength(0);
   });
 });

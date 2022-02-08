@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
 import { Highlight, HighlightEntity } from '../types';
+import { NotFoundError } from '@pocket-tools/apollo-utils';
 
 export class HighlightsDataService {
   public readonly userId: string;
@@ -14,7 +15,7 @@ export class HighlightsDataService {
       id: entity.annotation_id,
       quote: entity.quote,
       patch: entity.patch,
-      version: entity.version.toString(),
+      version: entity.version,
       _createdAt: entity.created_at.getTime() / 1000,
       _updatedAt: entity.updated_at.getTime() / 1000,
     };
@@ -26,5 +27,17 @@ export class HighlightsDataService {
    * @returns a list of Highlights associated to the itemId, or an empty list
    * if there are no highlights on a given itemId
    */
-  //   async getHighlightsByItemId(itemid: string): Promise<Highlight[]> {}
+  async getHighlightsByItemId(itemid: string): Promise<Highlight[]> {
+    const rows = await this.readDb<HighlightEntity>('user_annotations')
+      .select()
+      .where('item_id', itemid)
+      .andWhere('user_id', this.userId)
+      .andWhere('status', 1);
+
+    if (rows.length > 0) {
+      return rows.map(this.toGraphql);
+    }
+
+    throw new NotFoundError();
+  }
 }

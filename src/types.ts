@@ -16,12 +16,17 @@ export type Highlight = {
   id: string;
   quote: string;
   patch: string;
-  version: string;
+  version: number;
   _createdAt: number;
   _updatedAt: number;
 };
 
 // SavedItemAnnotations type conforming to GraphQL Schema
 export type SavedItemAnnotations = {
-  highlight: Highlight[];
+  highlights: Highlight[];
+};
+
+export type SavedItem = {
+  id: string;
+  annotations: SavedItemAnnotations;
 };
