@@ -28,7 +28,7 @@ export class HighlightsDataService {
    */
   async isItemInList(itemId: string): Promise<boolean> {
     const listItem = await this.readDb('list')
-      .pluck('itemId')
+      .pluck('item_id')
       .where('item_id', itemId)
       .andWhere('user_id', this.userId);
     return listItem.length > 0;
@@ -50,7 +50,6 @@ export class HighlightsDataService {
     if (rows.length > 0) {
       return rows.map(this.toGraphql);
     }
-
-    throw new NotFoundError();
+    return [];
   }
 }
