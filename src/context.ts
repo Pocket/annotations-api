@@ -7,6 +7,7 @@ import { readClient, writeClient } from './database/client';
 
 export interface IContext {
   userId: string;
+  isPremium: boolean;
   db: {
     readClient: Knex;
     writeClient: Knex;
@@ -27,7 +28,9 @@ export class ContextManager implements IContext {
     }
   ) {
     this.db = config.db;
+    this.isPremium = config.request.headers.premium ?? false;
   }
+  isPremium: boolean;
   get userId(): string {
     const userId = this.config.request.headers.userid;
 
