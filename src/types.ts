@@ -30,3 +30,10 @@ export type SavedItem = {
   id: string;
   annotations: SavedItemAnnotations;
 };
+
+export type HighlightInput = {
+  quote: string;
+  patch: string;
+  version: number;
+  itemId: string;
+};

@@ -1,7 +1,8 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
-import { Highlight, HighlightEntity } from '../types';
+import { Highlight, HighlightEntity, HighlightInput } from '../types';
 import { NotFoundError } from '@pocket-tools/apollo-utils';
+import { v4 as uuid } from 'uuid';
 
 export class HighlightsDataService {
   public readonly userId: string;
@@ -18,6 +19,34 @@ export class HighlightsDataService {
       version: entity.version,
       _createdAt: entity.created_at.getTime() / 1000,
       _updatedAt: entity.updated_at.getTime() / 1000,
+    };
+  }
+
+  /**
+   * Convert Create or Update highlight input to database entity
+   * that can be inserted/updated.
+   * Status is set to 1, so should not be used to delete or modify
+   * deleted highlights.
+   * If an ID is not provided, a UUID will be auto-generated.
+   * @param input HighlightInput from create or update mutation
+   * @param id Optional string ID, for updating an existing highlight.
+   * If provided, will use this ID instead of generating a new one.
+   * @returns HighlightEntity object (minus DB default fields created_at
+   * and updated_at) which can be used for insert/updating the highlight
+   * entry in the table.
+   */
+  private toDbEntity(
+    input: HighlightInput,
+    id?: string
+  ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
+    return {
+      annotation_id: id ?? uuid(),
+      user_id: parseInt(this.userId),
+      item_id: parseInt(input.itemId),
+      quote: input.quote,
+      patch: input.patch,
+      version: input.version,
+      status: 1,
     };
   }
 
