@@ -75,7 +75,10 @@ describe('Highlights on a SavedItem', () => {
     });
     expect(res.errors).toBeTruthy();
     expect(res.errors).toHaveLength(1);
-    // expect(res.errors[0].extensions?.code).toEqual('NOT_FOUND');
+    // Linter/compiler really shouldn't be complaining but... make it conditional
+    if (res.errors) {
+      expect(res.errors[0].extensions?.code).toEqual('NOT_FOUND');
+    }
   });
   it('should return an empty Highlights array if there are no highlights on a SavedItem', async () => {
     const variables = { itemId: 3 };
