@@ -20,6 +20,19 @@ export class HighlightsDataService {
       _updatedAt: entity.updated_at.getTime() / 1000,
     };
   }
+
+  /**
+   * Helper function to determine whether an item exists in a User's List
+   * @param itemId the itemId to look for in the User's List
+   * @returns true if the itemId is in the User's List, false otherwise
+   */
+  async isItemInList(itemId: string): Promise<boolean> {
+    const listItem = await this.readDb('list')
+      .pluck('itemId')
+      .where('item_id', itemId)
+      .andWhere('user_id', this.userId);
+    return listItem.length > 0;
+  }
   /**
    * Get highlights associated with an item in a user's list
    * @param itemid the itemId in the user's list
@@ -27,10 +40,10 @@ export class HighlightsDataService {
    * @returns a list of Highlights associated to the itemId, or an empty list
    * if there are no highlights on a given itemId
    */
-  async getHighlightsByItemId(itemid: string): Promise<Highlight[]> {
+  async getHighlightsByItemId(itemId: string): Promise<Highlight[]> {
     const rows = await this.readDb<HighlightEntity>('user_annotations')
       .select()
-      .where('item_id', itemid)
+      .where('item_id', itemId)
       .andWhere('user_id', this.userId)
       .andWhere('status', 1);
 
