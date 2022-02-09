@@ -33,43 +33,48 @@ describe('Highlights creation', () => {
     await truncateAndSeed();
   });
   it('should update an existing highlight owned by the user', async () => {
-    const variables: { id: string; input: HighlightInput[] } = {
-      id: '1',
-      input: [
-        {
-          itemId: '1',
-          version: 2,
-          patch: 'Prow scuttle parrel',
-          quote: 'provost Sail ho shrouds spirits boom',
-        },
-      ],
+    const input = {
+      itemId: '1',
+      version: 2,
+      patch: 'Prow scuttle parrel',
+      quote: 'provost Sail ho shrouds spirits boom',
+    };
+    const id = '1'
+    const variables: { id: string; input: HighlightInput } = {
+      id,
+      input,
     };
     const res = await server.executeOperation({
       query: UPDATE_HIGHLIGHT,
       variables,
     });
+
     const dbRow = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
+
+    expect(res?.data?.updateSavedItemHighlight).toBeTruthy();
+    expect(res?.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
+    expect(res?.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
+    expect(res?.data?.updateSavedItemHighlight.version).toEqual(input.version);
+    expect(res?.data?.updateSavedItemHighlight.id).toEqual(id);
   });
-  it('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
-    const variables: { id: string; input: HighlightInput[] } = {
+  it.skip('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
+    const variables: { id: string; input: HighlightInput } = {
       id: '999',
-      input: [
-        {
+      input:{
           itemId: '1',
           version: 2,
           patch: 'Prow scuttle parrel',
           quote: 'provost Sail ho shrouds spirits boom',
         },
-      ],
     };
     const res = await server.executeOperation({
       query: UPDATE_HIGHLIGHT,
       variables,
     });
   });
-  it('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
+  it.skip('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
     await db('user_annotations').insert({
       annotation_id: 55,
       user_id: 2,
@@ -81,16 +86,15 @@ describe('Highlights creation', () => {
       updated_at: now,
       created_at: now,
     });
-    const variables: { id: string; input: HighlightInput[] } = {
+    const variables: { id: string; input: HighlightInput } = {
       id: '55',
-      input: [
+      input:
         {
           itemId: '2',
           version: 2,
           patch: 'wherry doubloon chase',
           quote: 'Belay yo-ho-ho keelhaul squiffy black spot',
         },
-      ],
     };
     const res = await server.executeOperation({
       query: UPDATE_HIGHLIGHT,

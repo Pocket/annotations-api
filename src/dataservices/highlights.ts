@@ -7,9 +7,11 @@ import { v4 as uuid } from 'uuid';
 export class HighlightsDataService {
   public readonly userId: string;
   public readonly readDb: Knex;
+  public readonly writeDb: Knex;
   constructor(context: IContext) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
+    this.writeDb = context.db.writeClient;
   }
   private toGraphql(entity: HighlightEntity): Highlight {
     return {
@@ -81,5 +83,25 @@ export class HighlightsDataService {
     }
 
     throw new NotFoundError();
+  }
+
+  async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {
+    await this.writeDb('user_annotations').update({
+      quote: input.quote,
+      patch: input.patch,
+      version: input.version,
+      item_id: input.itemId,
+      updated_at: new Date()
+    }).where('annotation_id', id).andWhere('user_id', this.userId);
+  }
+
+  async getHighlightById(id: string): Promise<Highlight> {
+    const row = await this.readDb<HighlightEntity>('user_annotations')
+      .select()
+      .where('annotation_id', id)
+      .andWhere('user_id', this.userId)
+      .first() as HighlightEntity
+
+    return this.toGraphql(row)
   }
 }
