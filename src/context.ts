@@ -20,6 +20,7 @@ export interface IContext {
 export class ContextManager implements IContext {
   //   public readonly dataLoaders: IContext['dataLoaders'];
   public readonly db: IContext['db'];
+  public readonly isPremium: boolean;
 
   constructor(
     private config: {
@@ -30,7 +31,6 @@ export class ContextManager implements IContext {
     this.db = config.db;
     this.isPremium = config.request.headers.premium ?? false;
   }
-  isPremium: boolean;
   get userId(): string {
     const userId = this.config.request.headers.userid;
 
