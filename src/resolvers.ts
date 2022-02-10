@@ -15,4 +15,16 @@ export const resolvers = {
       return { highlights };
     },
   },
+  Mutation: {
+    deleteSavedItemHighlight: async (
+      _,
+      args,
+      context: IContext
+    ): Promise<string> => {
+      const highlightId = await new HighlightsDataService(
+        context
+      ).deleteHighlightById(args.id);
+      return highlightId;
+    },
+  },
 };
