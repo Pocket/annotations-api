@@ -70,4 +70,26 @@ export class HighlightsDataService {
     }
     return [];
   }
+
+  async createHighlight(
+    highlightInput: HighlightInput[]
+  ): Promise<Highlight[]> {
+    console.log('i did stuff');
+
+    const formattedHighlights = highlightInput.map((highlight) =>
+      this.toDbEntity(highlight)
+    );
+    // Insert into the db
+    await this.readDb<HighlightEntity>('user_annotations').insert(
+      formattedHighlights
+    );
+    // Query back the inserted rows
+    const rows = await this.readDb<HighlightEntity>('user_annotations')
+      .select()
+      .whereIn(
+        'annotation_id',
+        formattedHighlights.map((highlight) => highlight.annotation_id)
+      );
+    return rows.map(this.toGraphql);
+  }
 }

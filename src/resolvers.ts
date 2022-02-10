@@ -1,5 +1,10 @@
 import { IContext } from './context';
-import { SavedItemAnnotations, SavedItem } from './types';
+import {
+  SavedItemAnnotations,
+  SavedItem,
+  HighlightInput,
+  Highlight,
+} from './types';
 import { HighlightsDataService } from './dataservices/highlights';
 
 export const resolvers = {
@@ -13,6 +18,18 @@ export const resolvers = {
         context
       ).getHighlightsByItemId(parent.id);
       return { highlights };
+    },
+  },
+  Mutation: {
+    createSavedItemHighlights: async (
+      _,
+      args: { input: HighlightInput[] },
+      context: IContext
+    ): Promise<Highlight[]> => {
+      const highlights = await new HighlightsDataService(
+        context
+      ).createHighlight(args.input);
+      return highlights;
     },
   },
 };

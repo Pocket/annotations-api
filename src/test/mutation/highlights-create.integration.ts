@@ -55,6 +55,10 @@ describe('Highlights creation', () => {
         query: CREATE_HIGHLIGHTS,
         variables,
       });
+      const result = res.data?.createSavedItemHighlights;
+
+      expect(result.length).toEqual(1);
+      expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
     });
     it('should create a highlight on a SavedItem with existing highlights', async () => {
       const variables: { input: HighlightInput[] } = {
@@ -71,6 +75,11 @@ describe('Highlights creation', () => {
         query: CREATE_HIGHLIGHTS,
         variables,
       });
+
+      const result = res.data?.createSavedItemHighlights;
+
+      expect(result.length).toEqual(1);
+      expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
     });
   });
   describe('non-premium users', () => {
@@ -116,6 +125,11 @@ describe('Highlights creation', () => {
         query: CREATE_HIGHLIGHTS,
         variables,
       });
+
+      const result = res.errors;
+      if (result) {
+        expect(result[0]).toEqual('error');
+      }
     });
     it(
       'should not allow non-premium users to create additional highlights on a SavedItem' +

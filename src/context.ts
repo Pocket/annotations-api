@@ -4,6 +4,7 @@ import { Knex } from 'knex';
 import { AuthenticationError } from 'apollo-server-errors';
 import { Request } from 'express';
 import { readClient, writeClient } from './database/client';
+import { Headers } from 'apollo-server-env';
 
 export interface IContext {
   userId: string;
@@ -20,7 +21,6 @@ export interface IContext {
 export class ContextManager implements IContext {
   //   public readonly dataLoaders: IContext['dataLoaders'];
   public readonly db: IContext['db'];
-  public readonly isPremium: boolean;
 
   constructor(
     private config: {
@@ -29,7 +29,11 @@ export class ContextManager implements IContext {
     }
   ) {
     this.db = config.db;
-    this.isPremium = config.request.headers.premium ?? false;
+    this.config = config;
+    // this.isPremium = config.request?.headers.premium ?? false;
+  }
+  get isPremium(): boolean {
+    return this.config.request?.headers.premium ?? false;
   }
   get userId(): string {
     const userId = this.config.request.headers.userid;
