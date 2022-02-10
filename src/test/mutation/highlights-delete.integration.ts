@@ -22,16 +22,20 @@ describe('Highlights creation', () => {
       Object.entries(testData).map(([table, data]) => db(table).insert(data))
     );
   };
+
   beforeAll(() => {
     contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
     server = getServer();
   });
+
   beforeEach(async () => {
     await truncateAndSeed();
   });
+
   afterAll(() => {
     contextStub.restore();
   });
+
   it('should delete an existing highlight', async () => {
     const variables = { id: '1' };
     const res = await server.executeOperation({
@@ -41,33 +45,25 @@ describe('Highlights creation', () => {
     const dbRecord = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
+
+    expect(res).toBeTruthy();
+    expect(res?.data?.deleteSavedItemHighlight).toBe(variables.id);
+    expect(dbRecord[0].status).toBe(0);
   });
+
   it('should throw NOT_FOUND error if the highlight ID does not exist', async () => {
     const variables = { id: '999' };
     const res = await server.executeOperation({
       query: DELETE_HIGHLIGHT,
       variables,
     });
-  });
-  it('should throw NOT_FOUND error if the highlight is owned by a different user, and not delete the highlight', async () => {
-    await db('user_annotations').insert({
-      annotation_id: 55,
-      user_id: 2,
-      item_id: 2,
-      patch: 'Prow scuttle parrel',
-      quote: 'provost Sail ho shrouds spirits boom',
-      version: 1,
-      status: 1,
-      updated_at: now,
-      created_at: now,
-    });
-    const variables = { id: '55' };
-    const res = await server.executeOperation({
-      query: DELETE_HIGHLIGHT,
-      variables,
-    });
-    const dbRecord = await db<HighlightEntity>('user_annotations')
-      .select()
-      .where('annotation_id', variables.id);
+
+    expect(res?.errors).toBeTruthy();
+
+    if (res?.errors) {
+      expect(res?.errors[0].message).toBe(
+        'Error - Not Found: hightlight not found'
+      );
+    }
   });
 });
