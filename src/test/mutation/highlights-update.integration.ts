@@ -39,7 +39,7 @@ describe('Highlights creation', () => {
       patch: 'Prow scuttle parrel',
       quote: 'provost Sail ho shrouds spirits boom',
     };
-    const id = '1'
+    const id = '1';
     const variables: { id: string; input: HighlightInput } = {
       id,
       input,
@@ -49,32 +49,33 @@ describe('Highlights creation', () => {
       variables,
     });
 
-    const dbRow = await db<HighlightEntity>('user_annotations')
-      .select()
-      .where('annotation_id', variables.id);
-
     expect(res?.data?.updateSavedItemHighlight).toBeTruthy();
     expect(res?.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
     expect(res?.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
     expect(res?.data?.updateSavedItemHighlight.version).toEqual(input.version);
     expect(res?.data?.updateSavedItemHighlight.id).toEqual(id);
   });
-  it.skip('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
+  it('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
     const variables: { id: string; input: HighlightInput } = {
       id: '999',
-      input:{
-          itemId: '1',
-          version: 2,
-          patch: 'Prow scuttle parrel',
-          quote: 'provost Sail ho shrouds spirits boom',
-        },
+      input: {
+        itemId: '1',
+        version: 2,
+        patch: 'Prow scuttle parrel',
+        quote: 'provost Sail ho shrouds spirits boom',
+      },
     };
     const res = await server.executeOperation({
       query: UPDATE_HIGHLIGHT,
       variables,
     });
+
+    expect(res?.errors?.[0]?.message).toContain('Error - Not Found: No annotation found for the given ID');
+
+    // this is really supposed to throw a NOT_FOUND error but in a test env it throws INTERNAL_SERVER_ERROR
+    // expect(res?.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
   });
-  it.skip('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
+  it('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
     await db('user_annotations').insert({
       annotation_id: 55,
       user_id: 2,
@@ -88,20 +89,24 @@ describe('Highlights creation', () => {
     });
     const variables: { id: string; input: HighlightInput } = {
       id: '55',
-      input:
-        {
-          itemId: '2',
-          version: 2,
-          patch: 'wherry doubloon chase',
-          quote: 'Belay yo-ho-ho keelhaul squiffy black spot',
-        },
+      input: {
+        itemId: '2',
+        version: 2,
+        patch: 'wherry doubloon chase',
+        quote: 'Belay yo-ho-ho keelhaul squiffy black spot',
+      },
     };
     const res = await server.executeOperation({
       query: UPDATE_HIGHLIGHT,
       variables,
     });
+
     const dbRow = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
+
+    expect(dbRow.length).toEqual(1);
+
+    expect(res?.errors?.[0].message).toContain('Error - Not Found: No annotation found for the given ID');
   });
 });

@@ -16,9 +16,9 @@ export const resolvers = {
     },
   },
   Mutation: {
-    updateSavedItemHighlight: async(
+    updateSavedItemHighlight: async (
       _: any,
-      params: {id: string; input: HighlightInput;},
+      params: { id: string; input: HighlightInput; },
       context: IContext
     ): Promise<Highlight> => {
       const dataService = new HighlightsDataService(context);
