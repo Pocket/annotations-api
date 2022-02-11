@@ -30,5 +30,15 @@ export const resolvers = {
       await dataService.updateHighlightsById(params.id, params.input);
       return await dataService.getHighlightById(params.id);
     },
+    deleteSavedItemHighlight: async (
+      _,
+      args,
+      context: IContext
+    ): Promise<string> => {
+      const highlightId = await new HighlightsDataService(
+        context
+      ).deleteHighlightById(args.id);
+      return highlightId;
+    },
   },
 };

@@ -12,3 +12,8 @@ export const UPDATE_HIGHLIGHT = gql`
     }
   }
 `;
+export const DELETE_HIGHLIGHT = gql`
+  mutation DeleteHighlight($id: ID!) {
+    deleteSavedItemHighlight(id: $id)
+  }
+`;

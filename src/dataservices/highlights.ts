@@ -102,4 +102,17 @@ export class HighlightsDataService {
 
     return this.toGraphql(row);
   }
+
+  async deleteHighlightById(highlightId: string): Promise<string> {
+    // This will throw and error if it doesn't like you
+    const rowCount = await this.writeDb<HighlightEntity>('user_annotations')
+      .update({ status: 0 })
+      .where('user_id', this.userId)
+      .andWhere('annotation_id', highlightId);
+
+    // If no row is found throw an error
+    if (!rowCount) throw new NotFoundError('Highlight not found');
+
+    return highlightId;
+  }
 }
