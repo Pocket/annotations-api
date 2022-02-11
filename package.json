@@ -1,5 +1,5 @@
 {
-  "name": "backend-typescript-template",
+  "name": "annotations-api",
   "version": "1.0.0",
   "description": "",
   "main": "dist/main.js",
@@ -17,14 +17,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Pocket/backend-typescript-template.git"
+    "url": "git+https://github.com/Pocket/annotations-api.git"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Pocket/backend-typescript-template/issues"
-  },
-  "homepage": "https://github.com/Pocket/backend-typescript-template#readme",
+  "homepage": "https://github.com/Pocket/annotations-api#readme",
   "dependencies": {
     "@apollo/federation": "^0.33.9",
     "@pocket-tools/apollo-utils": "^2.2.0",
@@ -51,7 +48,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
-    "@types/jest": "^27.4.0",
+    "@types/jest": "27.4.0",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.10.0",
     "@typescript-eslint/parser": "^5.10.2",
