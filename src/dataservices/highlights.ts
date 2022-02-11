@@ -82,7 +82,7 @@ export class HighlightsDataService {
       .andWhere('annotation_id', highlightId);
 
     // If no row is found throw an error
-    if (!rowCount) throw new NotFoundError('hightlight not found');
+    if (!rowCount) throw new NotFoundError('Highlight not found');
 
     return highlightId;
   }

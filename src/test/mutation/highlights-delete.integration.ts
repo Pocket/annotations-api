@@ -7,7 +7,7 @@ import { seedData } from '../query/highlights-fixtures';
 import { DELETE_HIGHLIGHT } from './highlights-mutations';
 import { HighlightEntity } from '../../types';
 
-describe('Highlights creation', () => {
+describe('Highlights deletion', () => {
   let server: ApolloServer;
   let contextStub;
   const userId = 1;
@@ -62,7 +62,7 @@ describe('Highlights creation', () => {
 
     if (res?.errors) {
       expect(res?.errors[0].message).toBe(
-        'Error - Not Found: hightlight not found'
+        'Error - Not Found: Highlight not found'
       );
     }
   });
