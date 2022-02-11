@@ -1,22 +1,20 @@
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './typeDefs';
 import { resolvers } from './resolvers';
-import { buildFederatedSchema } from '@apollo/federation';
+import { buildSubgraphSchema } from '@apollo/federation';
 import { sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginInlineTraceDisabled,
   ApolloServerPluginInlineTrace,
-  ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingDisabled,
 } from 'apollo-server-core';
 import { ContextManager } from './context';
 import { readClient, writeClient } from './database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({
-    schema: buildFederatedSchema([{ typeDefs, resolvers }]),
+    schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
     plugins: [
       sentryPlugin,
       process.env.NODE_ENV === 'production'
@@ -25,9 +23,6 @@ export function getServer(): ApolloServer {
       process.env.NODE_ENV === 'production'
         ? ApolloServerPluginInlineTrace()
         : ApolloServerPluginInlineTraceDisabled(),
-      process.env.NODE_ENV === 'production'
-        ? ApolloServerPluginUsageReporting()
-        : ApolloServerPluginUsageReportingDisabled(),
     ],
     context: ({ req }) =>
       new ContextManager({
