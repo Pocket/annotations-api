@@ -1,5 +1,6 @@
 {
     "editor.codeActionsOnSave": {
     "source.fixAll": true
-    }
+    },
+    "jestrunner.codeLensSelector": "**/*.{test,spec,integration}.{js,jsx,ts,tsx}",
 }
