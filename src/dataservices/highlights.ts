@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
-import { Highlight, HighlightEntity } from '../types';
+import { Highlight, HighlightEntity, HighlightInput } from '../types';
+import { v4 as uuid } from 'uuid';
 
 export class HighlightsDataService {
   public readonly userId: string;
@@ -21,6 +22,37 @@ export class HighlightsDataService {
   }
 
   /**
+   * Convert Create or Update highlight input to database entity
+   * that can be inserted/updated.
+   * Status is set to 1, so should not be used to delete or modify
+   * deleted highlights.
+   * If an ID is not provided, a UUID will be auto-generated.
+   * @param input HighlightInput from create or update mutation
+   * @param id Optional string ID, for updating an existing highlight.
+   * If provided, will use this ID instead of generating a new one.
+   * @returns HighlightEntity object (minus DB default fields created_at
+   * and updated_at) which can be used for insert/updating the highlight
+   * entry in the table.
+   */
+  private toDbEntity(
+    input: HighlightInput,
+    id?: string
+  ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
+    return {
+      annotation_id: id ?? uuid(),
+      user_id: parseInt(this.userId),
+      item_id: parseInt(input.itemId),
+      quote: input.quote,
+      patch: input.patch,
+      version: input.version,
+      status: 1,
+    };
+  }
+
+  /**
+   * Get highlights associated with an item in a user's list
+   * @param itemid the itemId in the user's list
+   * @throws NotFoundError if the itemId doesn't exist in the user's list
    * Get highlights associated with an item in a user's list
    * @param itemid the itemId in the user's list
    * @returns a list of Highlights associated to the itemId, or an empty list

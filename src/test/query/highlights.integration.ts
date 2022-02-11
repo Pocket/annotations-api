@@ -44,7 +44,7 @@ describe('Highlights on a SavedItem', () => {
     // Check all fields are resolved
     expect(res).toBeTruthy();
     expect(annotations).toHaveLength(1);
-    expect(annotations[0]).toStrictEqual(expectedAnnotation);
+    expect(annotations[0]).toMatchObject(expectedAnnotation);
   });
   it('should return an array of all active (not-deleted) highlights associated with a SavedItem', async () => {
     const variables = { itemId: 2 };
