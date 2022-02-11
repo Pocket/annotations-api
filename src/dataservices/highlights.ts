@@ -1,7 +1,6 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
 import { Highlight, HighlightEntity } from '../types';
-import { NotFoundError } from '@pocket-tools/apollo-utils';
 
 export class HighlightsDataService {
   public readonly userId: string;
@@ -24,7 +23,6 @@ export class HighlightsDataService {
   /**
    * Get highlights associated with an item in a user's list
    * @param itemid the itemId in the user's list
-   * @throws NotFoundError if the itemId doesn't exist in the user's list
    * @returns a list of Highlights associated to the itemId, or an empty list
    * if there are no highlights on a given itemId
    */
