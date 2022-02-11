@@ -4,7 +4,6 @@ import { Knex } from 'knex';
 import { AuthenticationError } from 'apollo-server-errors';
 import { Request } from 'express';
 import { readClient, writeClient } from './database/client';
-import { Headers } from 'apollo-server-env';
 
 export interface IContext {
   userId: string;
