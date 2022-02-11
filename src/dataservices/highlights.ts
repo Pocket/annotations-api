@@ -53,21 +53,11 @@ export class HighlightsDataService {
   }
 
   /**
-   * Helper function to determine whether an item exists in a User's List
-   * @param itemId the itemId to look for in the User's List
-   * @returns true if the itemId is in the User's List, false otherwise
-   */
-  async isItemInList(itemId: string): Promise<boolean> {
-    const listItem = await this.readDb('list')
-      .pluck('itemId')
-      .where('item_id', itemId)
-      .andWhere('user_id', this.userId);
-    return listItem.length > 0;
-  }
-  /**
    * Get highlights associated with an item in a user's list
    * @param itemid the itemId in the user's list
    * @throws NotFoundError if the itemId doesn't exist in the user's list
+   * Get highlights associated with an item in a user's list
+   * @param itemid the itemId in the user's list
    * @returns a list of Highlights associated to the itemId, or an empty list
    * if there are no highlights on a given itemId
    */
@@ -81,8 +71,7 @@ export class HighlightsDataService {
     if (rows.length > 0) {
       return rows.map(this.toGraphql);
     }
-
-    throw new NotFoundError();
+    return [];
   }
 
   async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {

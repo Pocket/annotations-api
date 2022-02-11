@@ -1,5 +1,10 @@
 import { IContext } from './context';
-import { SavedItemAnnotations, SavedItem, HighlightInput, Highlight } from './types';
+import {
+  SavedItemAnnotations,
+  SavedItem,
+  HighlightInput,
+  Highlight,
+} from './types';
 import { HighlightsDataService } from './dataservices/highlights';
 
 export const resolvers = {
@@ -18,12 +23,12 @@ export const resolvers = {
   Mutation: {
     updateSavedItemHighlight: async (
       _: any,
-      params: { id: string; input: HighlightInput; },
+      params: { id: string; input: HighlightInput },
       context: IContext
     ): Promise<Highlight> => {
       const dataService = new HighlightsDataService(context);
       await dataService.updateHighlightsById(params.id, params.input);
       return await dataService.getHighlightById(params.id);
-    }
-  }
+    },
+  },
 };
