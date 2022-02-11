@@ -70,7 +70,9 @@ describe('Highlights creation', () => {
       variables,
     });
 
-    expect(res?.errors?.[0]?.message).toContain('Error - Not Found: No annotation found for the given ID');
+    expect(res?.errors?.[0]?.message).toContain(
+      'Error - Not Found: No annotation found for the given ID'
+    );
 
     // this is really supposed to throw a NOT_FOUND error but in a test env it throws INTERNAL_SERVER_ERROR
     // expect(res?.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
@@ -107,6 +109,8 @@ describe('Highlights creation', () => {
 
     expect(dbRow.length).toEqual(1);
 
-    expect(res?.errors?.[0].message).toContain('Error - Not Found: No annotation found for the given ID');
+    expect(res?.errors?.[0].message).toContain(
+      'Error - Not Found: No annotation found for the given ID'
+    );
   });
 });
