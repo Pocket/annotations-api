@@ -27,6 +27,9 @@ export const resolvers = {
       args: { input: HighlightInput[] },
       context: IContext
     ): Promise<Highlight[]> => {
+      // For non-premium users, check if there are more than
+      // the limit of requested highlights per itemId in the batch
+      // Throws error if validation fails
       validateCreateSavedItemHighlights(context, args.input);
       const highlights = await new HighlightsDataService(
         context

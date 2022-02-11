@@ -89,10 +89,23 @@ export class HighlightsDataService {
     return [];
   }
 
+  /**
+   * Check whether the requested number of highlights would exceed the
+   * highlight limit, taking into account active (status=1) highlights
+   * already associated to the item in the database.
+   * Only necessary to run this check for non-premium users.
+   * @param highlightInput input to create highlight mutation
+   * @throws UserInputError if the requested highlights would exceed
+   * the limit for any item
+   * @returns void if validation passes
+   */
   async checkHighlightLimit(highlightInput: HighlightInput[]) {
+    // Compute the total requested highlights by itemId
     const additionalCounts = groupByCount(highlightInput, 'itemId');
     const uniqueItemIds = Object.keys(additionalCounts).map(parseInt);
+    // Get current highlight count by itemId
     const currentCounts = await this.highlightsCountByItemIds(uniqueItemIds);
+    // Add the two counts together to get the desired totals
     const totalDesiredCounts = sumByKey(currentCounts, additionalCounts);
     const exceedsLimit = Object.entries(totalDesiredCounts).find(
       ([_, count]) => count > config.basicHighlightLimit
@@ -104,11 +117,24 @@ export class HighlightsDataService {
     }
   }
 
+  /**
+   * Create highlights associated to items in the user's list
+   * Enforces the limit on highlights per item for non-premium users
+   * by checking the current highlights stored in the database.
+   * This method is atomic -- if any request in the highlightInput
+   * batch would violate the highlight limit, the entire batch will
+   * fail.
+   * Does not check whether the Item exists in the user's list, as
+   * this is reasonable to assume from the way the client generates
+   * the API request.
+   * @param highlightInput
+   * @returns The Highlights created
+   */
   async createHighlight(
     highlightInput: HighlightInput[]
   ): Promise<Highlight[]> {
-    console.log('i did stuff');
     // Ensure non-premium users don't exceed highlight limits
+    // Will throw error here if validation fails
     if (!this.context.isPremium) {
       await this.checkHighlightLimit(highlightInput);
     }

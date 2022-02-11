@@ -6,7 +6,7 @@ import { groupByCount } from './dataAggregation';
 
 /**
  * Input validation on createSavedItemHighlights mutation, to ensure
- * non-premium users do not exceed the 3-highlights per item limit.
+ * non-premium users do not exceed the highlights-per-item limit.
  * @param context GraphQL Request context
  * @param input Input to createSavedItemHighlights mutation
  * @throws UserInputError if validation fails
