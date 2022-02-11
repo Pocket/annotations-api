@@ -2,11 +2,14 @@ import { Knex } from 'knex';
 import { IContext } from '../context';
 import { Highlight, HighlightEntity, HighlightInput } from '../types';
 import { v4 as uuid } from 'uuid';
+import config from '../config';
+import { UserInputError } from 'apollo-server-errors';
+import { groupByCount, sumByKey } from '../utils/dataAggregation';
 
 export class HighlightsDataService {
   public readonly userId: string;
   public readonly readDb: Knex;
-  constructor(context: IContext) {
+  constructor(private context: IContext) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
   }
@@ -49,6 +52,21 @@ export class HighlightsDataService {
     };
   }
 
+  async highlightsCountByItemIds(
+    itemIds: number[]
+  ): Promise<{ [itemId: string]: number }> {
+    const result = await this.readDb<HighlightEntity>('user_annotations')
+      .select('item_id')
+      .groupBy('item_id')
+      .whereIn('item_id', itemIds)
+      .andWhere('user_id', this.userId)
+      .andWhere('status', 1)
+      .count<{ item_id: string; count: number }[]>('* as count');
+    return result.reduce((acc, row) => {
+      acc[row.item_id.toString()] = row.count;
+      return acc;
+    }, {});
+  }
   /**
    * Get highlights associated with an item in a user's list
    * @param itemid the itemId in the user's list
@@ -71,10 +89,29 @@ export class HighlightsDataService {
     return [];
   }
 
+  async checkHighlightLimit(highlightInput: HighlightInput[]) {
+    const additionalCounts = groupByCount(highlightInput, 'itemId');
+    const uniqueItemIds = Object.keys(additionalCounts).map(parseInt);
+    const currentCounts = await this.highlightsCountByItemIds(uniqueItemIds);
+    const totalDesiredCounts = sumByKey(currentCounts, additionalCounts);
+    const exceedsLimit = Object.entries(totalDesiredCounts).find(
+      ([_, count]) => count > config.basicHighlightLimit
+    );
+    if (exceedsLimit != null) {
+      throw new UserInputError(
+        `Too many highlights for itemId: ${exceedsLimit[0]}`
+      );
+    }
+  }
+
   async createHighlight(
     highlightInput: HighlightInput[]
   ): Promise<Highlight[]> {
     console.log('i did stuff');
+    // Ensure non-premium users don't exceed highlight limits
+    if (!this.context.isPremium) {
+      await this.checkHighlightLimit(highlightInput);
+    }
 
     const formattedHighlights = highlightInput.map((highlight) =>
       this.toDbEntity(highlight)

@@ -5,6 +5,7 @@ export default {
     defaultMaxAge: 86400,
     port: 4008,
   },
+  basicHighlightLimit: 3, // non-premium users are limited to 3 highlights per item
   sentry: {
     dsn: process.env.SENTRY_DSN || '',
     release: process.env.GIT_SHA || '',

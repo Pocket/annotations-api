@@ -2,5 +2,9 @@
     "editor.codeActionsOnSave": {
     "source.fixAll": true
     },
-    "jestrunner.codeLensSelector": "**/*.{test,spec,integration}.{js,jsx,ts,tsx}",
+    "jestrunner.debugOptions": {
+        "args": ["--forceExit", "--testTimeout=100000", "--runInBand"]
+    },
+    "jestrunner.runOptions": ["--forceExit", "--runInBand"],
+    "jestrunner.codeLensSelector": "**/*.{test,spec,integration}.{js,jsx,ts,tsx}"    
 }

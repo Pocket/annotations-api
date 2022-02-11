@@ -126,37 +126,37 @@ describe('Highlights creation', () => {
         variables,
       });
 
-      const result = res.errors;
-      if (result) {
-        expect(result[0]).toEqual('error');
-      }
+      expect(res.errors).not.toBeUndefined;
+      expect(res.errors!.length).toEqual(1);
+      expect(res.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
+      expect(res.errors![0].message).toContain('Too many highlights');
     });
-    it(
-      'should not allow non-premium users to create additional highlights on a SavedItem' +
-        'that already has highlights, if it would put them over the three-highlight limit',
-      async () => {
-        const variables: { input: HighlightInput[] } = {
-          input: [
-            {
-              itemId: '2',
-              version: 2,
-              patch: 'Prow scuttle parrel',
-              quote: 'provost Sail ho shrouds spirits boom',
-            },
-            {
-              itemId: '2',
-              version: 2,
-              patch: 'hempen jig carouser',
-              quote: 'Bring a spring upon her cable holystone',
-            },
-          ],
-        };
-        const res = await server.executeOperation({
-          query: CREATE_HIGHLIGHTS,
-          variables,
-        });
-      }
-    );
+    it('should not allow non-premium users to create additional highlights on a SavedItem that already has highlights, if it would put them over the three-highlight limit', async () => {
+      const variables: { input: HighlightInput[] } = {
+        input: [
+          {
+            itemId: '2',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+          },
+          {
+            itemId: '2',
+            version: 2,
+            patch: 'hempen jig carouser',
+            quote: 'Bring a spring upon her cable holystone',
+          },
+        ],
+      };
+      const res = await server.executeOperation({
+        query: CREATE_HIGHLIGHTS,
+        variables,
+      });
+      expect(res.errors).not.toBeUndefined;
+      expect(res.errors!.length).toEqual(1);
+      expect(res.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
+      expect(res.errors![0].message).toContain('Too many highlights');
+    });
     it('should not include deleted highlights in the limit', async () => {
       const variables: { input: HighlightInput[] } = {
         input: [
@@ -172,6 +172,9 @@ describe('Highlights creation', () => {
         query: CREATE_HIGHLIGHTS,
         variables,
       });
+      expect(res.errors).toBeUndefined;
+      expect(res.data).toBeTruthy();
+      expect(res.data?.createSavedItemHighlights.length).toEqual(1);
     });
   });
   describe('premium users', () => {

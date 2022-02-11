@@ -30,9 +30,9 @@ export class ContextManager implements IContext {
   ) {
     this.db = config.db;
     this.config = config;
-    // this.isPremium = config.request?.headers.premium ?? false;
   }
   get isPremium(): boolean {
+    // Using getter to make it easier to stub in tests
     return this.config.request?.headers.premium ?? false;
   }
   get userId(): string {
