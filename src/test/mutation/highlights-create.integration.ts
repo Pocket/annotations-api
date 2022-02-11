@@ -6,11 +6,12 @@ import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { CREATE_HIGHLIGHTS } from './highlights-mutations';
 import { HighlightInput } from '../../types';
-
 describe('Highlights creation', () => {
   let server: ApolloServer;
+  // Stubs/mocks
   let contextStub;
   let premiumStub;
+  // Variables/data
   const userId = 1;
   const db = readClient();
   const now = new Date();
@@ -57,8 +58,22 @@ describe('Highlights creation', () => {
       });
       const result = res.data?.createSavedItemHighlights;
 
+      // Check the whole object and its fields
+      const expectedHighlight = {
+        version: 2,
+        patch: 'Prow scuttle parrel',
+        quote: 'provost Sail ho shrouds spirits boom',
+      };
       expect(result.length).toEqual(1);
-      expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
+      expect(result[0]).toEqual(expect.objectContaining(expectedHighlight));
+      // Check properties we don't know ahead of time
+      expect(typeof result[0].id).toBe('string');
+      expect(result[0].id).toBeTruthy();
+      // CreatedAt and updatedAt are set on the DB server so difficult to mock
+      expect(typeof result[0]._createdAt).toBe('number');
+      expect(typeof result[0]._updatedAt).toBe('number');
+      expect(result[0]._createdAt).toBeTruthy();
+      expect(result[0]._updatedAt).toBeTruthy();
     });
     it('should create a highlight on a SavedItem with existing highlights', async () => {
       const variables: { input: HighlightInput[] } = {
@@ -220,6 +235,12 @@ describe('Highlights creation', () => {
         query: CREATE_HIGHLIGHTS,
         variables,
       });
+      const result = res.data?.createSavedItemHighlights;
+
+      expect(result.length).toEqual(4);
+      const expectedQuotes = variables.input.map((_) => _.quote);
+      const actualQuotes = result.map((_) => _.quote);
+      expect(actualQuotes).toEqual(expect.arrayContaining(expectedQuotes));
     });
     it(
       'should not restrict the number of highlights a premium user can add to a SavedItem' +
@@ -245,6 +266,12 @@ describe('Highlights creation', () => {
           query: CREATE_HIGHLIGHTS,
           variables,
         });
+        const result = res.data?.createSavedItemHighlights;
+
+        expect(result.length).toEqual(2);
+        const expectedQuotes = variables.input.map((_) => _.quote);
+        const actualQuotes = result.map((_) => _.quote);
+        expect(actualQuotes).toEqual(expect.arrayContaining(expectedQuotes));
       }
     );
   });
