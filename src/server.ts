@@ -8,14 +8,14 @@ import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginInlineTraceDisabled,
   ApolloServerPluginInlineTrace,
+  ApolloServerPluginUsageReporting,
+  ApolloServerPluginUsageReportingDisabled,
 } from 'apollo-server-core';
 import { ContextManager } from './context';
 import { readClient, writeClient } from './database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({
-    // mocks: { Timestamp: () => '12345789' },
-    // mockEntireSchema: true,
     schema: buildFederatedSchema([{ typeDefs, resolvers }]),
     plugins: [
       sentryPlugin,
@@ -25,6 +25,9 @@ export function getServer(): ApolloServer {
       process.env.NODE_ENV === 'production'
         ? ApolloServerPluginInlineTrace()
         : ApolloServerPluginInlineTraceDisabled(),
+      process.env.NODE_ENV === 'production'
+        ? ApolloServerPluginUsageReporting()
+        : ApolloServerPluginUsageReportingDisabled(),
     ],
     context: ({ req }) =>
       new ContextManager({
