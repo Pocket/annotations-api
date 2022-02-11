@@ -86,25 +86,26 @@ export class HighlightsDataService {
   }
 
   async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {
-    const annotation = await this.getHighlightById(id)
+    const annotation = await this.getHighlightById(id);
 
-    await this.writeDb('user_annotations').update({
+    await this.writeDb('user_annotations')
+      .update({
         quote: input.quote,
         patch: input.patch,
         version: input.version,
         item_id: input.itemId,
-        updated_at: new Date()
+        updated_at: new Date(),
       })
       .where('annotation_id', annotation.id)
       .andWhere('user_id', this.userId);
   }
 
   async getHighlightById(id: string): Promise<Highlight> {
-    const row = await this.readDb<HighlightEntity>('user_annotations')
+    const row = (await this.readDb<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', id)
       .andWhere('user_id', this.userId)
-      .first() as HighlightEntity;
+      .first()) as HighlightEntity;
 
     if (!row) {
       throw new NotFoundError('No annotation found for the given ID');
