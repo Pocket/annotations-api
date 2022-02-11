@@ -3,7 +3,7 @@
 
 echo "Setting up database"
 
-sudo apt-get update && sudo apt-get install -y mysql-client
+sudo apt-get update && sudo apt-get install -y default-mysql-client
 
 set -e
 mysql=( mysql -uroot -h127.0.0.1 )

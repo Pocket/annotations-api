@@ -29,7 +29,7 @@ export class ContextManager implements IContext {
     }
   ) {
     this.db = config.db;
-    this.isPremium = config?.request?.headers?.premium ?? false;
+    this.isPremium = config.request?.headers.premium ?? false;
   }
   get userId(): string {
     const userId = this.config.request.headers.userid;
