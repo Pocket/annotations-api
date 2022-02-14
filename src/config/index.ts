@@ -10,6 +10,13 @@ export default {
     release: process.env.GIT_SHA || '',
     environment: process.env.NODE_ENV || 'development',
   },
+  aws: {
+    region: process.env.AWS_REGION || 'us-east-1',
+  },
+  dynamoDb: {
+    notesTable:
+      process.env.HIGHLIGHT_NOTES_TABLE || 'ANNOT-local-highlight-notes',
+  },
   database: {
     // contains tables for user, list, tags, annotations, etc.
     read: {

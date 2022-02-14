@@ -1,0 +1,24 @@
+
+{
+  "TableName": "ANNOT-local-highlight-notes",
+  "KeySchema": [
+    {
+      "AttributeName": "highlightId",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "highlightId",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "note",
+      "AttributeType": "S"
+    }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 5,
+    "WriteCapacityUnits": 5
+  }
+}
