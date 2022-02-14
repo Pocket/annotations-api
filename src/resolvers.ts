@@ -36,5 +36,15 @@ export const resolvers = {
       ).createHighlight(args.input);
       return highlights;
     },
+    deleteSavedItemHighlight: async (
+      _,
+      args,
+      context: IContext
+    ): Promise<string> => {
+      const highlightId = await new HighlightsDataService(
+        context
+      ).deleteHighlightById(args.id);
+      return highlightId;
+    },
   },
 };

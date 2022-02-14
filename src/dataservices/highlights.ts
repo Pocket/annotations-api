@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
 import { Highlight, HighlightEntity, HighlightInput } from '../types';
+import { NotFoundError } from '@pocket-tools/apollo-utils';
 import { v4 as uuid } from 'uuid';
 import config from '../config';
 import { UserInputError } from 'apollo-server-errors';
@@ -9,9 +10,12 @@ import { groupByCount, sumByKey } from '../utils/dataAggregation';
 export class HighlightsDataService {
   public readonly userId: string;
   public readonly readDb: Knex;
+  public readonly writeDb: Knex;
+
   constructor(private context: IContext) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
+    this.writeDb = context.db.writeClient;
   }
   private toGraphql(entity: HighlightEntity): Highlight {
     return {
@@ -154,5 +158,18 @@ export class HighlightsDataService {
         formattedHighlights.map((highlight) => highlight.annotation_id)
       );
     return rows.map(this.toGraphql);
+  }
+
+  async deleteHighlightById(highlightId: string): Promise<string> {
+    // This will throw and error if it doesn't like you
+    const rowCount = await this.writeDb<HighlightEntity>('user_annotations')
+      .update({ status: 0 })
+      .where('user_id', this.userId)
+      .andWhere('annotation_id', highlightId);
+
+    // If no row is found throw an error
+    if (!rowCount) throw new NotFoundError('Highlight not found');
+
+    return highlightId;
   }
 }
