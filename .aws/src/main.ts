@@ -240,6 +240,22 @@ class AnnotationsAPI extends TerraformStack {
             {
               name: 'HIGHLIGHT_NOTES_TABLE',
               value: dynamodb.highlightNotesTable.dynamodb.name
+            },
+            {
+              name: 'HIGHLIGHT_NOTES_KEY',
+              value: config.dynamodb.notesTable.key.name
+            },
+            {
+              name: 'HIGHLIGHT_NOTES_KEY_TYPE',
+              value: config.dynamodb.notesTable.key.type
+            },
+            {
+              name: 'HIGHLIGHT_NOTES_NOTE',
+              value: config.dynamodb.notesTable.note.name
+            },
+            {
+              name: 'HIGHLIGHT_NOTES_NOTE_TYPE',
+              value: config.dynamodb.notesTable.note.type
             }
           ],
           secretEnvVars: [

@@ -1,6 +1,7 @@
 
 {
   "TableName": "ANNOT-local-highlight-notes",
+  "BillingMode": "PAY_PER_REQUEST",
   "KeySchema": [
     {
       "AttributeName": "highlightId",
@@ -11,14 +12,6 @@
     {
       "AttributeName": "highlightId",
       "AttributeType": "S"
-    },
-    {
-      "AttributeName": "note",
-      "AttributeType": "S"
     }
-  ],
-  "ProvisionedThroughput": {
-    "ReadCapacityUnits": 5,
-    "WriteCapacityUnits": 5
-  }
+  ]
 }

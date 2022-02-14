@@ -26,17 +26,11 @@ export class DynamoDB extends Resource {
       prefix: `${config.shortName}-${config.environment}-highlight-notes`,
       capacityMode: ApplicationDynamoDBTableCapacityMode.ON_DEMAND,
       tableConfig: {
-        hashKey: 'highlightId',
-        writeCapacity: 5,
-        readCapacity: 5,
+        hashKey: config.dynamodb.notesTable.key.name,
         attribute: [
           {
-            name: 'highlightId',
-            type: 'S',
-          },
-          {
-            name: 'note',
-            type: 'S',
+            name: config.dynamodb.notesTable.key.name,
+            type: config.dynamodb.notesTable.key.type,
           },
         ],
       },
