@@ -172,7 +172,6 @@ jobs:
           paths:
             - ./node_modules
       - run:
-          # TODO: Update
           name: run setup.sh
           command: |
             export $(egrep -v '^#' .docker/local.env | xargs -0) && ./.circleci/scripts/setup.sh --hosts --db --aws
