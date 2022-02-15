@@ -21,5 +21,5 @@ npm start:dev
 ```bash
 # npm ci not required if already up-to-date
 npm ci
-docker-compose up
+docker compose up
 ```

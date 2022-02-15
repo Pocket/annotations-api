@@ -108,7 +108,6 @@ describe('Highlights update', () => {
       .where('annotation_id', variables.id);
 
     expect(dbRow.length).toEqual(1);
-
     expect(res?.errors?.[0].message).toContain(
       'Error - Not Found: No annotation found for the given ID'
     );
