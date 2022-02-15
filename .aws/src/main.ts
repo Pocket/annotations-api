@@ -5,13 +5,11 @@ import {
   RemoteBackend,
   TerraformStack,
 } from 'cdktf';
-import {
-  AwsProvider,
-} from '@cdktf/provider-aws';
+import { AwsProvider } from '@cdktf/provider-aws';
 import {
   DataAwsCallerIdentity,
   DataAwsRegion,
-} from '@cdktf/provider-aws/lib/datasources'
+} from '@cdktf/provider-aws/lib/datasources';
 import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/sns';
 import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/kms';
 import { config } from './config';
@@ -35,7 +33,7 @@ class AnnotationsAPI extends TerraformStack {
     new PagerdutyProvider(this, 'pagerduty_provider', { token: undefined });
     new LocalProvider(this, 'local_provider');
     new NullProvider(this, 'null_provider');
-    
+
     new RemoteBackend(this, {
       hostname: 'app.terraform.io',
       organization: 'Pocket',
@@ -45,7 +43,7 @@ class AnnotationsAPI extends TerraformStack {
     const region = new DataAwsRegion(this, 'region');
     const caller = new DataAwsCallerIdentity(this, 'caller');
     const cache = AnnotationsAPI.createElasticache(this);
-    const dynamodb = new DynamoDB(this, 'dynamodb')
+    const dynamodb = new DynamoDB(this, 'dynamodb');
 
     const pocketApp = this.createPocketAlbApplication({
       pagerDuty: this.createPagerDuty(),
@@ -54,7 +52,7 @@ class AnnotationsAPI extends TerraformStack {
       region,
       caller,
       cache,
-      dynamodb
+      dynamodb,
     });
 
     this.createApplicationCodePipeline(pocketApp);
@@ -182,7 +180,7 @@ class AnnotationsAPI extends TerraformStack {
       secretsManagerKmsAlias,
       snsTopic,
       cache,
-      dynamodb
+      dynamodb,
     } = dependencies;
 
     const databaseSecretsArn = `arn:aws:secretsmanager:${region.name}:${caller.accountId}:secret:${config.name}/${config.environment}/READITLA_DB`;
@@ -239,24 +237,16 @@ class AnnotationsAPI extends TerraformStack {
             },
             {
               name: 'HIGHLIGHT_NOTES_TABLE',
-              value: dynamodb.highlightNotesTable.dynamodb.name
+              value: dynamodb.highlightNotesTable.dynamodb.name,
             },
             {
               name: 'HIGHLIGHT_NOTES_KEY',
-              value: config.dynamodb.notesTable.key.name
-            },
-            {
-              name: 'HIGHLIGHT_NOTES_KEY_TYPE',
-              value: config.dynamodb.notesTable.key.type
+              value: config.dynamodb.notesTable.key,
             },
             {
               name: 'HIGHLIGHT_NOTES_NOTE',
-              value: config.dynamodb.notesTable.note.name
+              value: config.dynamodb.notesTable.note,
             },
-            {
-              name: 'HIGHLIGHT_NOTES_NOTE_TYPE',
-              value: config.dynamodb.notesTable.note.type
-            }
           ],
           secretEnvVars: [
             {
@@ -380,8 +370,8 @@ class AnnotationsAPI extends TerraformStack {
           threshold: 25,
           evaluationPeriods: 4,
           period: 300,
-          actions: config.isDev ? [] : []
-        }
+          actions: config.isDev ? [] : [],
+        },
       },
     });
   }
