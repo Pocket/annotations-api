@@ -7,7 +7,7 @@ import { seedData } from '../query/highlights-fixtures';
 import { UPDATE_HIGHLIGHT } from './highlights-mutations';
 import { HighlightEntity, HighlightInput } from '../../types';
 
-describe('Highlights creation', () => {
+describe('Highlights update', () => {
   let server: ApolloServer;
   let contextStub;
   const userId = 1;
