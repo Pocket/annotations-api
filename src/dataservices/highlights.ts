@@ -3,12 +3,16 @@ import { IContext } from '../context';
 import { Highlight, HighlightEntity, HighlightInput } from '../types';
 import { NotFoundError } from '@pocket-tools/apollo-utils';
 import { v4 as uuid } from 'uuid';
+import config from '../config';
+import { UserInputError } from 'apollo-server-errors';
+import { groupByCount, sumByKey } from '../utils/dataAggregation';
 
 export class HighlightsDataService {
   public readonly userId: string;
   public readonly readDb: Knex;
   public readonly writeDb: Knex;
-  constructor(context: IContext) {
+
+  constructor(private context: IContext) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
     this.writeDb = context.db.writeClient;
@@ -52,6 +56,21 @@ export class HighlightsDataService {
     };
   }
 
+  async highlightsCountByItemIds(
+    itemIds: number[]
+  ): Promise<{ [itemId: string]: number }> {
+    const result = await this.readDb<HighlightEntity>('user_annotations')
+      .select('item_id')
+      .groupBy('item_id')
+      .whereIn('item_id', itemIds)
+      .andWhere('user_id', this.userId)
+      .andWhere('status', 1)
+      .count<{ item_id: string; count: number }[]>('* as count');
+    return result.reduce((acc, row) => {
+      acc[row.item_id.toString()] = row.count;
+      return acc;
+    }, {});
+  }
   /**
    * Get highlights associated with an item in a user's list
    * @param itemid the itemId in the user's list
@@ -74,6 +93,72 @@ export class HighlightsDataService {
     return [];
   }
 
+  /**
+   * Check whether the requested number of highlights would exceed the
+   * highlight limit, taking into account active (status=1) highlights
+   * already associated to the item in the database.
+   * Only necessary to run this check for non-premium users.
+   * @param highlightInput input to create highlight mutation
+   * @throws UserInputError if the requested highlights would exceed
+   * the limit for any item
+   * @returns void if validation passes
+   */
+  async checkHighlightLimit(highlightInput: HighlightInput[]) {
+    // Compute the total requested highlights by itemId
+    const additionalCounts = groupByCount(highlightInput, 'itemId');
+    const uniqueItemIds = Object.keys(additionalCounts).map(parseInt);
+    // Get current highlight count by itemId
+    const currentCounts = await this.highlightsCountByItemIds(uniqueItemIds);
+    // Add the two counts together to get the desired totals
+    const totalDesiredCounts = sumByKey(currentCounts, additionalCounts);
+    const exceedsLimit = Object.entries(totalDesiredCounts).find(
+      ([_, count]) => count > config.basicHighlightLimit
+    );
+    if (exceedsLimit != null) {
+      throw new UserInputError(
+        `Too many highlights for itemId: ${exceedsLimit[0]}`
+      );
+    }
+  }
+
+  /**
+   * Create highlights associated to items in the user's list
+   * Enforces the limit on highlights per item for non-premium users
+   * by checking the current highlights stored in the database.
+   * This method is atomic -- if any request in the highlightInput
+   * batch would violate the highlight limit, the entire batch will
+   * fail.
+   * Does not check whether the Item exists in the user's list, as
+   * this is reasonable to assume from the way the client generates
+   * the API request.
+   * @param highlightInput
+   * @returns The Highlights created
+   */
+  async createHighlight(
+    highlightInput: HighlightInput[]
+  ): Promise<Highlight[]> {
+    // Ensure non-premium users don't exceed highlight limits
+    // Will throw error here if validation fails
+    if (!this.context.isPremium) {
+      await this.checkHighlightLimit(highlightInput);
+    }
+
+    const formattedHighlights = highlightInput.map((highlight) =>
+      this.toDbEntity(highlight)
+    );
+    // Insert into the db
+    await this.readDb<HighlightEntity>('user_annotations').insert(
+      formattedHighlights
+    );
+    // Query back the inserted rows
+    const rows = await this.readDb<HighlightEntity>('user_annotations')
+      .select()
+      .whereIn(
+        'annotation_id',
+        formattedHighlights.map((highlight) => highlight.annotation_id)
+      );
+    return rows.map(this.toGraphql);
+  }
   async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {
     const annotation = await this.getHighlightById(id);
 

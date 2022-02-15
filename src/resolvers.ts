@@ -21,6 +21,16 @@ export const resolvers = {
     },
   },
   Mutation: {
+    createSavedItemHighlights: async (
+      _,
+      args: { input: HighlightInput[] },
+      context: IContext
+    ): Promise<Highlight[]> => {
+      const highlights = await new HighlightsDataService(
+        context
+      ).createHighlight(args.input);
+      return highlights;
+    },
     updateSavedItemHighlight: async (
       _: any,
       params: { id: string; input: HighlightInput },
