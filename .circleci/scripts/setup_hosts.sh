@@ -6,7 +6,7 @@ set -e
 echo "Adding service hosts records"
 
 
-declare -a arr=("mysql", "localstack")
+declare -a arr=("mysql" "localstack")
 
 for i in "${arr[@]}"; do
     echo 127.0.0.1 "$i" | sudo tee -a /etc/hosts
