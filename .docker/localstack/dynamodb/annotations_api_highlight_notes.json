@@ -1,0 +1,17 @@
+
+{
+  "TableName": "ANNOT-local-highlight-notes",
+  "BillingMode": "PAY_PER_REQUEST",
+  "KeySchema": [
+    {
+      "AttributeName": "highlightId",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "highlightId",
+      "AttributeType": "S"
+    }
+  ]
+}

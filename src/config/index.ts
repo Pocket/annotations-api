@@ -10,6 +10,24 @@ export default {
     release: process.env.GIT_SHA || '',
     environment: process.env.NODE_ENV || 'development',
   },
+  aws: {
+    region: process.env.AWS_REGION || 'us-east-1',
+  },
+  dynamoDb: {
+    notesTable: {
+      name: process.env.HIGHLIGHT_NOTES_TABLE || 'ANNOT-local-highlight-notes',
+      key: {
+        name: process.env.HIGHLIGHT_NOTES_KEY || 'highlightId',
+        type: process.env.HIGHLIGHT_NOTES_KEY_TYPE || 'S',
+      },
+      // DynamoDB does not require a schema for non-key attributes,
+      // but we will configure here so we don't have to manipulate strings
+      note: {
+        name: process.env.HIGHLIGHT_NOTES_NOTE || 'note',
+        type: process.env.HIGHLIGHT_NOTES_NOTE_TYPE || 'S',
+      },
+    },
+  },
   database: {
     // contains tables for user, list, tags, annotations, etc.
     read: {
