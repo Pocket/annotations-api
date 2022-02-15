@@ -51,5 +51,19 @@ export const config = {
   envVars: {
     databasePort: '3306',
     databaseTz: 'US/Central',
+  },
+  dynamodb: {
+    notesTable: {
+      key: {
+        name: 'highlightId',
+        type: 'S'
+      },
+      // DynamoDB doesn't require a schema, but we want to create an
+      // environment variable so we are not working with string field names
+      note: {
+        name: 'note',
+        type: 'S'
+      }
+    }
   }
 };
