@@ -31,6 +31,15 @@ export const resolvers = {
       ).createHighlight(args.input);
       return highlights;
     },
+    updateSavedItemHighlight: async (
+      _: any,
+      params: { id: string; input: HighlightInput },
+      context: IContext
+    ): Promise<Highlight> => {
+      const dataService = new HighlightsDataService(context);
+      await dataService.updateHighlightsById(params.id, params.input);
+      return await dataService.getHighlightById(params.id);
+    },
     deleteSavedItemHighlight: async (
       _,
       args,

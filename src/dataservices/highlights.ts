@@ -159,6 +159,34 @@ export class HighlightsDataService {
       );
     return rows.map(this.toGraphql);
   }
+  async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {
+    const annotation = await this.getHighlightById(id);
+
+    await this.writeDb('user_annotations')
+      .update({
+        quote: input.quote,
+        patch: input.patch,
+        version: input.version,
+        item_id: input.itemId,
+        updated_at: new Date(),
+      })
+      .where('annotation_id', annotation.id)
+      .andWhere('user_id', this.userId);
+  }
+
+  async getHighlightById(id: string): Promise<Highlight> {
+    const row = (await this.readDb<HighlightEntity>('user_annotations')
+      .select()
+      .where('annotation_id', id)
+      .andWhere('user_id', this.userId)
+      .first()) as HighlightEntity;
+
+    if (!row) {
+      throw new NotFoundError('No annotation found for the given ID');
+    }
+
+    return this.toGraphql(row);
+  }
 
   async deleteHighlightById(highlightId: string): Promise<string> {
     // This will throw and error if it doesn't like you
