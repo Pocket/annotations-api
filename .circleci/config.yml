@@ -139,6 +139,18 @@ jobs:
         environment:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           TZ: 'UTC'
+      # localstack
+      - image: localstack/localstack
+        auth:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          DEBUG: 1
+          SERVICES: dynamodb
+          DATA_DIR: /tmp/localstack/data
+          EXTRA_CORS_ALLOWED_HEADERS: Content-Disposition, Content-Type, x-amz-acl
+          EXTRA_CORS_EXPOSE_HEADERS: ETag
+          HOSTNAME_EXTERNAL: localstack
     steps:
       - checkout
       - restore_cache:
@@ -160,7 +172,7 @@ jobs:
           paths:
             - ./node_modules
       - run:
-          # TODO: Update 
+          # TODO: Update
           name: run setup.sh
           command: |
             export $(egrep -v '^#' .docker/local.env | xargs -0) && ./.circleci/scripts/setup.sh --hosts --db --aws
@@ -214,7 +226,7 @@ workflows:
           <<: *not_main
           context: pocket
           name: test_integrations
-      
+
       - apollo
 
       - build:
