@@ -21,6 +21,21 @@ export type Highlight = {
   _updatedAt: number;
 };
 
+export type HighlightNote = {
+  highlightId?: string;
+  text: string;
+  _createdAt: number;
+  _updatedAt: number;
+};
+
+// In DynamoDB can't use underscore in projection expression
+export type HighlightNoteEntity = {
+  highlightId?: string;
+  note: string; // text is reserved keyword
+  createdAt: number;
+  updatedAt: number;
+};
+
 // SavedItemAnnotations type conforming to GraphQL Schema
 export type SavedItemAnnotations = {
   highlights: Highlight[];
