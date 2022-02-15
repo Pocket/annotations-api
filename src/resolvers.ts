@@ -4,8 +4,10 @@ import {
   SavedItem,
   HighlightInput,
   Highlight,
+  HighlightNote,
 } from './types';
 import { HighlightsDataService } from './dataservices/highlights';
+import { NotesDataService } from './dataservices/notes';
 
 export const resolvers = {
   SavedItem: {
@@ -18,6 +20,15 @@ export const resolvers = {
         context
       ).getHighlightsByItemId(parent.id);
       return { highlights };
+    },
+  },
+  Highlight: {
+    note: async (
+      parent: Highlight,
+      _,
+      context: IContext
+    ): Promise<HighlightNote | null> => {
+      return new NotesDataService().get(parent.id);
     },
   },
   Mutation: {

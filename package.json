@@ -24,6 +24,8 @@
   "homepage": "https://github.com/Pocket/annotations-api#readme",
   "dependencies": {
     "@apollo/federation": "^0.33.9",
+    "@aws-sdk/client-dynamodb": "^3.51.0",
+    "@aws-sdk/lib-dynamodb": "^3.51.0",
     "@pocket-tools/apollo-utils": "^2.2.0",
     "@sentry/node": "^6.17.7",
     "@sentry/tracing": "^6.17.6",

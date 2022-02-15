@@ -26,11 +26,11 @@ export class DynamoDB extends Resource {
       prefix: `${config.shortName}-${config.environment}-highlight-notes`,
       capacityMode: ApplicationDynamoDBTableCapacityMode.ON_DEMAND,
       tableConfig: {
-        hashKey: config.dynamodb.notesTable.key.name,
+        hashKey: config.dynamodb.notesTable.key,
         attribute: [
           {
-            name: config.dynamodb.notesTable.key.name,
-            type: config.dynamodb.notesTable.key.type,
+            name: config.dynamodb.notesTable.key,
+            type: 'S',
           },
         ],
       },

@@ -1,4 +1,4 @@
-const name = 'AnnotationsAPI'; 
+const name = 'AnnotationsAPI';
 const domainPrefix = 'annotations-api';
 const isDev = process.env.NODE_ENV === 'development';
 const environment = isDev ? 'Dev' : 'Prod';
@@ -15,7 +15,6 @@ const branch = isDev ? 'dev' : 'main';
 const cacheNodes = isDev ? 2 : 2;
 const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
 const appPort = 4008;
-
 
 export const config = {
   name,
@@ -54,16 +53,10 @@ export const config = {
   },
   dynamodb: {
     notesTable: {
-      key: {
-        name: 'highlightId',
-        type: 'S'
-      },
+      key: 'highlightId',
       // DynamoDB doesn't require a schema, but we want to create an
       // environment variable so we are not working with string field names
-      note: {
-        name: 'note',
-        type: 'S'
-      }
-    }
-  }
+      note: 'note',
+    },
+  },
 };

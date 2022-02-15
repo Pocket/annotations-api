@@ -13,20 +13,20 @@ export default {
   },
   aws: {
     region: process.env.AWS_REGION || 'us-east-1',
+    endpoint:
+      process.env.NODE_ENV != 'production'
+        ? process.env.AWS_ENDPOINT || 'http://localstack:4566'
+        : undefined,
   },
   dynamoDb: {
     notesTable: {
       name: process.env.HIGHLIGHT_NOTES_TABLE || 'ANNOT-local-highlight-notes',
-      key: {
-        name: process.env.HIGHLIGHT_NOTES_KEY || 'highlightId',
-        type: process.env.HIGHLIGHT_NOTES_KEY_TYPE || 'S',
-      },
+      key: process.env.HIGHLIGHT_NOTES_KEY || 'highlightId',
       // DynamoDB does not require a schema for non-key attributes,
       // but we will configure here so we don't have to manipulate strings
-      note: {
-        name: process.env.HIGHLIGHT_NOTES_NOTE || 'note',
-        type: process.env.HIGHLIGHT_NOTES_NOTE_TYPE || 'S',
-      },
+      note: process.env.HIGHLIGHT_NOTES_NOTE || 'note',
+      _updatedAt: 'updatedAt',
+      _createdAt: 'createdAt',
     },
   },
   database: {
