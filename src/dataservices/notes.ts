@@ -1,4 +1,4 @@
-import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
@@ -12,34 +12,22 @@ import { HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
 
 export class NotesDataService {
-  private client: DynamoDBClient;
   // Easier to work with Document client since it abstracts the types
   public dynamo: DynamoDBDocumentClient;
   private table = config.dynamoDb.notesTable;
 
-  constructor() {
-    const dynamoClientConfig: DynamoDBClientConfig = {
-      region: config.aws.region,
-    };
-    // Set endpoint for local client, otherwise provider default
-    if (config.aws.endpoint != null) {
-      dynamoClientConfig['endpoint'] = config.aws.endpoint;
-    }
-    this.client = new DynamoDBClient(dynamoClientConfig);
+  constructor(private client: DynamoDBClient) {
     this.dynamo = DynamoDBDocumentClient.from(this.client, {
-      marshallOptions: { convertEmptyValues: true },
+      marshallOptions: {
+        convertEmptyValues: true,
+        removeUndefinedValues: true,
+      },
     });
-  }
-
-  /**
-   * Destroy underlying DynamoDB client
-   */
-  public destroy() {
-    this.client.destroy();
   }
 
   private toGraphQl(response: HighlightNoteEntity): HighlightNote {
     return {
+      highlightId: response[this.table.key],
       text: response[this.table.note],
       _createdAt: response[this.table._createdAt],
       _updatedAt: response[this.table._updatedAt],
@@ -59,6 +47,7 @@ export class NotesDataService {
         this.table.note,
         this.table._createdAt,
         this.table._updatedAt,
+        this.table.key,
       ].join(','),
     });
     const response: GetCommandOutput = await this.dynamo.send(getItemCommand);
@@ -68,7 +57,7 @@ export class NotesDataService {
     return null;
   }
 
-  public async getMany(ids: string[]): Promise<HighlightNote[] | null> {
+  public async getMany(ids: string[]): Promise<Array<HighlightNote>> {
     const keyList = ids.map((id) => ({ [this.table.key]: id }));
     let unprocessedKeys: BatchGetCommandInput['RequestItems'] = {
       [this.table.name]: {
@@ -97,7 +86,15 @@ export class NotesDataService {
       }
       // Increment tries for backoff, and reset unprocessed key list
       tries += 1;
-      unprocessedKeys = response.UnprocessedKeys;
+      // Might get an empty object which is truthy in JS...
+      if (
+        response.UnprocessedKeys &&
+        Object.keys(response.UnprocessedKeys).length > 0
+      ) {
+        unprocessedKeys = response.UnprocessedKeys;
+      } else {
+        unprocessedKeys = undefined;
+      }
     }
     return itemResults.map((item) => this.toGraphQl(item));
   }

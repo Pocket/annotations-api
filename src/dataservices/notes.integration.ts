@@ -2,10 +2,11 @@ import sinon from 'sinon';
 import { NotesDataService } from './notes';
 import { BatchGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
+import { dynamoClient } from '../database/client';
 
 describe('Notes data service', () => {
   let dynamoSendStub: sinon.stub;
-  const service = new NotesDataService();
+  const service = new NotesDataService(dynamoClient());
 
   const dynamoFirstResult: BatchGetCommandOutput = {
     Responses: {

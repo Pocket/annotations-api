@@ -1,9 +1,11 @@
 import { Knex } from 'knex';
-// import { Highlight } from './types';
-// import DataLoader from 'dataloader';
+import { HighlightNote } from './types';
+import DataLoader from 'dataloader';
 import { AuthenticationError } from 'apollo-server-errors';
 import { Request } from 'express';
-import { readClient, writeClient } from './database/client';
+import { dynamoClient, readClient, writeClient } from './database/client';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { createNotesLoader } from './dataservices/dataloaders';
 
 export interface IContext {
   userId: string;
@@ -12,24 +14,31 @@ export interface IContext {
     readClient: Knex;
     writeClient: Knex;
   };
-  //   dataLoaders: {
-  //     highlightsByItemId: DataLoader<string, Highlight>;
-  //   };
+  dynamoClient: DynamoDBClient;
+  dataLoaders: {
+    noteByHighlightId: DataLoader<string, HighlightNote | undefined>;
+  };
 }
 
 export class ContextManager implements IContext {
-  //   public readonly dataLoaders: IContext['dataLoaders'];
   public readonly db: IContext['db'];
+  public readonly dataLoaders: IContext['dataLoaders'];
 
   constructor(
     private config: {
       request: any;
       db: { readClient: Knex; writeClient: Knex };
+      dynamoClient: DynamoDBClient;
     }
   ) {
     this.db = config.db;
     this.config = config;
+    this.dynamoClient = config.dynamoClient;
+    this.dataLoaders = {
+      noteByHighlightId: createNotesLoader(config.dynamoClient),
+    };
   }
+  dynamoClient: DynamoDBClient;
   get isPremium(): boolean {
     // Using getter to make it easier to stub in tests
     return this.config.request?.headers.premium ?? false;
@@ -61,5 +70,6 @@ export function getContext(req: Request): ContextManager {
       readClient: readClient(),
       writeClient: writeClient(),
     },
+    dynamoClient: dynamoClient(),
   });
 }

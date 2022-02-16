@@ -7,7 +7,6 @@ import {
   HighlightNote,
 } from './types';
 import { HighlightsDataService } from './dataservices/highlights';
-import { NotesDataService } from './dataservices/notes';
 
 export const resolvers = {
   SavedItem: {
@@ -27,8 +26,8 @@ export const resolvers = {
       parent: Highlight,
       _,
       context: IContext
-    ): Promise<HighlightNote | null> => {
-      return new NotesDataService().get(parent.id);
+    ): Promise<HighlightNote | undefined> => {
+      return context.dataLoaders.noteByHighlightId.load(parent.id);
     },
   },
   Mutation: {
