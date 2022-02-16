@@ -6,9 +6,14 @@ import {
   BatchGetCommand,
   BatchGetCommandInput,
   BatchGetCommandOutput,
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  BatchWriteCommandOutput,
+  PutCommand,
+  PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
-import { HighlightNote, HighlightNoteEntity } from '../types';
+import { Highlight, HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
 
 export class NotesDataService {
@@ -32,6 +37,17 @@ export class NotesDataService {
       _createdAt: response[this.table._createdAt],
       _updatedAt: response[this.table._updatedAt],
     };
+  }
+
+  private toEntity(id: string, text: string): HighlightNoteEntity {
+    const timeStamp = new Date().getTime() / 1000;
+    const noteEntity = {
+      [this.table.key]: id,
+      [this.table.note]: text,
+      [this.table._createdAt]: timeStamp,
+      [this.table._updatedAt]: timeStamp,
+    } as HighlightNoteEntity;
+    return noteEntity;
   }
 
   /**
@@ -102,4 +118,37 @@ export class NotesDataService {
     }
     return itemResults.map((item) => this.toGraphQl(item));
   }
+
+  public async create(id: string, text: string): Promise<HighlightNote> {
+    const noteEntity = this.toEntity(id, text);
+    const putItemCommand = new PutCommand({
+      Item: noteEntity,
+      TableName: this.table.name,
+    });
+
+    const response: PutCommandOutput = await this.dynamo.send(putItemCommand);
+    if (response?.$metadata.httpStatusCode === 200) {
+      return this.toGraphQl(noteEntity as HighlightNoteEntity);
+    }
+    throw new Error(
+      `Unable to create highlight note (dynamoDB request ID = ${response?.$metadata.requestId}`
+    );
+  }
+
+  // public async batchWrite(
+  //   notes: { id: string; text: string }[]
+  // ): Promise<HighlightNote[]> {
+  //   const noteRequests = notes.map((note) => {
+  //     return {
+  //       PutRequest: {
+  //         Item: this.toEntity(note.id, note.text),
+  //       },
+  //     };
+  //   });
+  //   const batchWriteCommand = new BatchWriteCommand({
+  //     RequestItems: {
+  //       [this.table.name]: noteRequests,
+  //     },
+  //   });
+  // }
 }

@@ -4,7 +4,10 @@ import sinon from 'sinon';
 import { ContextManager } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
-import { CREATE_HIGHLIGHTS } from './highlights-mutations';
+import {
+  CREATE_HIGHLIGHTS,
+  CREATE_HIGHLIGHTS_WITH_NOTE,
+} from './highlights-mutations';
 import { HighlightInput } from '../../types';
 describe('Highlights creation', () => {
   let server: ApolloServer;
@@ -201,6 +204,81 @@ describe('Highlights creation', () => {
     afterAll(() => premiumStub.restore());
     beforeEach(async () => {
       await truncateAndSeed();
+    });
+    it('should be able to create a note at the same time as a highlight', async () => {
+      const variables: { input: HighlightInput[] } = {
+        input: [
+          {
+            itemId: '3',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+            note: 'This is the coolest of notes',
+          },
+        ],
+      };
+      const res = await server.executeOperation({
+        query: CREATE_HIGHLIGHTS_WITH_NOTE,
+        variables,
+      });
+      const result = res.data?.createSavedItemHighlights;
+
+      // Check the whole object and its fields
+      const expectedHighlight = {
+        version: 2,
+        patch: 'Prow scuttle parrel',
+        quote: 'provost Sail ho shrouds spirits boom',
+        note: {
+          text: 'This is the coolest of notes',
+        },
+      };
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(expect.objectContaining(expectedHighlight));
+      // Check properties we don't know ahead of time
+      expect(typeof result[0].id).toBe('string');
+      expect(result[0].id).toBeTruthy();
+      // CreatedAt and updatedAt are set on the DB server so difficult to mock
+      expect(typeof result[0]._createdAt).toBe('number');
+      expect(typeof result[0]._updatedAt).toBe('number');
+      expect(result[0]._createdAt).toBeTruthy();
+      expect(result[0]._updatedAt).toBeTruthy();
+      expect(result[0].note?.text).toBe('This is the coolest of notes');
+    });
+    it('should create multiple highlights with and without notes', async () => {
+      const variables: { input: HighlightInput[] } = {
+        input: [
+          {
+            itemId: '3',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+            note: 'This is the coolest of notes',
+          },
+          {
+            itemId: '2',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+          },
+          {
+            itemId: '2',
+            version: 2,
+            patch: 'Trysail Sail ho',
+            quote: 'Corsair red ensign hulk smartly boom jib rum',
+            note: 'An even cooler note???',
+          },
+        ],
+      };
+      const res = await server.executeOperation({
+        query: CREATE_HIGHLIGHTS_WITH_NOTE,
+        variables,
+      });
+      const result = res.data?.createSavedItemHighlights;
+
+      expect(result.length).toEqual(3);
+      expect(result[0].note?.text).toBe('This is the coolest of notes');
+      expect(result[1].note).toBeNull();
+      expect(result[2].note.text).toBe('An even cooler note???');
     });
     it('should not restrict the number of highlights a premium user can create at once', async () => {
       const variables: { input: HighlightInput[] } = {

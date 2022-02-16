@@ -39,7 +39,22 @@ export const resolvers = {
       const highlights = await new HighlightsDataService(
         context
       ).createHighlight(args.input);
-      return highlights;
+      const notes = await Promise.all(
+        args.input.map((highlightInput, index) => {
+          if (highlightInput.note) {
+            return new NotesDataService().create(
+              highlights[index].id,
+              highlightInput.note
+            );
+          }
+        })
+      );
+      const returnHighlights = highlights.map((item, index) => {
+        const tmpReturn = { ...item };
+        if (args.input[index].note) tmpReturn.note = notes[index] ?? undefined;
+        return tmpReturn;
+      });
+      return returnHighlights;
     },
     updateSavedItemHighlight: async (
       _: any,
