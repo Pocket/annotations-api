@@ -3,9 +3,13 @@ import {
   DynamoDBDocumentClient,
   GetCommand,
   GetCommandOutput,
+  BatchGetCommand,
+  BatchGetCommandInput,
+  BatchGetCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
 import { HighlightNote, HighlightNoteEntity } from '../types';
+import { backoff } from './utils';
 
 export class NotesDataService {
   private client: DynamoDBClient;
@@ -62,5 +66,39 @@ export class NotesDataService {
       return this.toGraphQl(response.Item as HighlightNoteEntity);
     }
     return null;
+  }
+
+  public async getMany(ids: string[]): Promise<HighlightNote[] | null> {
+    const keyList = ids.map((id) => ({ [this.table.key]: id }));
+    let unprocessedKeys: BatchGetCommandInput['RequestItems'] = {
+      [this.table.name]: {
+        Keys: keyList,
+      },
+    };
+    let tries = 0;
+    const itemResults: HighlightNoteEntity[] = [];
+    // Make requests until entire batch is completed, since size limits
+    // may require multiple batch requests
+    while (unprocessedKeys) {
+      const batchItemCommand = new BatchGetCommand({
+        RequestItems: unprocessedKeys,
+      });
+      // Exponential backoff between requests
+      if (tries > 0) {
+        await backoff(tries, 3000);
+      }
+      const response: BatchGetCommandOutput = await this.dynamo.send(
+        batchItemCommand
+      );
+      if (response.Responses) {
+        itemResults.push(
+          ...(response.Responses?.[this.table.name] as HighlightNoteEntity[])
+        );
+      }
+      // Increment tries for backoff, and reset unprocessed key list
+      tries += 1;
+      unprocessedKeys = response.UnprocessedKeys;
+    }
+    return itemResults.map((item) => this.toGraphQl(item));
   }
 }
