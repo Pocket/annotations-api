@@ -3,6 +3,13 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { NotesDataService } from './notes';
 import { HighlightNote } from '../types';
 
+/**
+ * Function for initializing dataloader. This function should be
+ * called when the context is constructed to create a new dataloader
+ * instance for each request.
+ * @param client DynamoDB Client to use inside NotesDataService
+ * @returns DataLoader which loads HighlightNote objects by highlightId string key
+ */
 export function createNotesLoader(
   client: DynamoDBClient
 ): DataLoader<string, HighlightNote | undefined> {
@@ -17,6 +24,13 @@ export function createNotesLoader(
   );
 }
 
+/**
+ * Function for reordering keys in case the order is not preserved when loading,
+ * or some keys are missing.
+ * @param keys keys passed to the dataloader
+ * @param notesResponse the response from the server/cache containing the data
+ * @returns an array of notes (or undefined) that match the shape of the keys input
+ */
 function orderAndMapNotes(
   keys: string[],
   notesResponse: HighlightNote[]

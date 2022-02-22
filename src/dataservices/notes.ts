@@ -56,7 +56,11 @@ export class NotesDataService {
     }
     return null;
   }
-
+  /**
+   * Fetch a batch of notes attached to a highlight
+   * @param ids array of highlight's ids to fetch (annotation_id in the Pocket db)
+   * @returns array of HighlightNote objects
+   */
   public async getMany(ids: string[]): Promise<Array<HighlightNote>> {
     const keyList = ids.map((id) => ({ [this.table.key]: id }));
     let unprocessedKeys: BatchGetCommandInput['RequestItems'] = {
