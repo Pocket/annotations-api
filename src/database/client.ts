@@ -7,7 +7,7 @@ let writeDb: Knex;
 let dynamoDb: DynamoDBClient;
 
 /**
- * Create shared DynamoDB Client. By deafult, reuses connections.
+ * Create shared DynamoDB Client. By default, reuses connections.
  * This is because the overhead of creating a new TCP connection
  * for each DynamoDB request might be greater latency than the
  * operation itself.
