@@ -78,7 +78,7 @@ export class NotesDataService {
       });
       // Exponential backoff between requests
       if (tries > 0) {
-        await backoff(tries, 3000);
+        await backoff(tries, config.aws.maxBackoff);
       }
       const response: BatchGetCommandOutput = await this.dynamo.send(
         batchItemCommand
