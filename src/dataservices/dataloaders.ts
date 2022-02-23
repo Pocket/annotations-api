@@ -27,11 +27,12 @@ export function createNotesLoader(
 /**
  * Function for reordering keys in case the order is not preserved when loading,
  * or some keys are missing.
+ * Public for testing. Not intended to be used outside of the notes dataloader.
  * @param keys keys passed to the dataloader
  * @param notesResponse the response from the server/cache containing the data
  * @returns an array of notes (or undefined) that match the shape of the keys input
  */
-function orderAndMapNotes(
+export function orderAndMapNotes(
   keys: string[],
   notesResponse: HighlightNote[]
 ): Array<HighlightNote | undefined> {

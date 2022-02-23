@@ -1,21 +1,48 @@
 import sinon from 'sinon';
 import { NotesDataService } from '../dataservices/notes';
 import { dynamoClient } from '../database/client';
-import { createNotesLoader } from './dataloaders';
+import { createNotesLoader, orderAndMapNotes } from './dataloaders';
 
 describe('dataloaders', () => {
-  describe('for HighlightNotes', () => {
+  const mockNotesResponse = [
+    { highlightId: 'abc', text: 'bread', _createdAt: 1, _updatedAt: 1 },
+    { highlightId: 'def', text: 'garlic', _createdAt: 1, _updatedAt: 1 },
+    { highlightId: 'hij', text: 'yummy', _createdAt: 1, _updatedAt: 1 },
+  ];
+  describe('orderAndMapNotes utility function', () => {
+    it('reorders data by highlightId', () => {
+      const result = orderAndMapNotes(
+        ['hij', 'def', 'abc', 'hij'],
+        mockNotesResponse
+      );
+      const expected = [
+        { highlightId: 'hij', text: 'yummy', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'def', text: 'garlic', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'abc', text: 'bread', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'hij', text: 'yummy', _createdAt: 1, _updatedAt: 1 },
+      ];
+      expect(result).toStrictEqual(expected);
+    });
+    it('returns undefined object if data is missing for key', () => {
+      const result = orderAndMapNotes(['zzz', 'def', 'abc'], mockNotesResponse);
+      const expected = [
+        undefined,
+        { highlightId: 'def', text: 'garlic', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'abc', text: 'bread', _createdAt: 1, _updatedAt: 1 },
+      ];
+      expect(result).toStrictEqual(expected);
+    });
+  });
+  describe('loading HighlightNotes', () => {
     let notesStub;
     let notesLoader;
     // This is required for NotesDataServiceconstructor,
     // but fetch is never invoked because we mock the data retrieval function
     const dynamo = dynamoClient();
     beforeEach(() => {
-      notesStub = sinon.stub(NotesDataService.prototype, 'getMany').resolves([
-        { highlightId: 'abc', text: 'bread' },
-        { highlightId: 'def', text: 'garlic' },
-        { highlightId: 'hij', text: 'yummy' },
-      ]);
+      notesStub = sinon
+        .stub(NotesDataService.prototype, 'getMany')
+        .resolves(mockNotesResponse);
       notesLoader = createNotesLoader(dynamo);
     });
     afterEach(() => {
@@ -24,10 +51,10 @@ describe('dataloaders', () => {
     it('reorders data by highlightId', async () => {
       const result = await notesLoader.loadMany(['hij', 'def', 'abc', 'hij']);
       const expected = [
-        { highlightId: 'hij', text: 'yummy' },
-        { highlightId: 'def', text: 'garlic' },
-        { highlightId: 'abc', text: 'bread' },
-        { highlightId: 'hij', text: 'yummy' }, // retrieved from cache
+        { highlightId: 'hij', text: 'yummy', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'def', text: 'garlic', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'abc', text: 'bread', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'hij', text: 'yummy', _createdAt: 1, _updatedAt: 1 }, // retrieved from cache
       ];
       expect(result).toStrictEqual(expected);
       // Should get subsequent duplicate keys from cache
@@ -37,8 +64,8 @@ describe('dataloaders', () => {
       const result = await notesLoader.loadMany(['zzz', 'def', 'abc']);
       const expected = [
         undefined,
-        { highlightId: 'def', text: 'garlic' },
-        { highlightId: 'abc', text: 'bread' },
+        { highlightId: 'def', text: 'garlic', _createdAt: 1, _updatedAt: 1 },
+        { highlightId: 'abc', text: 'bread', _createdAt: 1, _updatedAt: 1 },
       ];
       expect(result).toStrictEqual(expected);
     });
