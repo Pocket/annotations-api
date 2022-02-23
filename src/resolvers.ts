@@ -7,6 +7,8 @@ import {
   HighlightNote,
 } from './types';
 import { HighlightsDataService } from './dataservices/highlights';
+import { NotesDataService } from './dataservices/notes';
+import { NotFoundError } from '@pocket-tools/apollo-utils';
 
 export const resolvers = {
   SavedItem: {
@@ -42,7 +44,7 @@ export const resolvers = {
       const notes = await Promise.all(
         args.input.map((highlightInput, index) => {
           if (highlightInput.note) {
-            return new NotesDataService().create(
+            return new NotesDataService(context.dynamoClient, context).create(
               highlights[index].id,
               highlightInput.note
             );
@@ -74,6 +76,22 @@ export const resolvers = {
         context
       ).deleteHighlightById(args.id);
       return highlightId;
+    },
+    createSavedItemHighlightNote: async (
+      _,
+      args: { id: string; input: string },
+      context: IContext
+    ): Promise<HighlightNote | Error> => {
+      const dataService = new HighlightsDataService(context);
+      try {
+        await dataService.getHighlightById(args.id);
+        return new NotesDataService(context.dynamoClient, context).create(
+          args.id,
+          args.input
+        );
+      } catch (err) {
+        return err;
+      }
     },
   },
 };

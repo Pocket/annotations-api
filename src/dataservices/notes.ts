@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
@@ -15,13 +15,29 @@ import {
 import config from '../config';
 import { Highlight, HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
+import { IContext } from '../context';
+import { ForbiddenError } from 'apollo-server-errors';
 
 export class NotesDataService {
   // Easier to work with Document client since it abstracts the types
   public dynamo: DynamoDBDocumentClient;
   private table = config.dynamoDb.notesTable;
 
-  constructor(private client: DynamoDBClient) {
+  constructor(private client: DynamoDBClient, private context: IContext) {
+    if (!this.context.isPremium) {
+      throw new ForbiddenError(
+        'Premium account required to access this feature'
+      );
+    }
+
+    const dynamoClientConfig: DynamoDBClientConfig = {
+      region: config.aws.region,
+    };
+    // Set endpoint for local client, otherwise provider default
+    if (config.aws.endpoint != null) {
+      dynamoClientConfig['endpoint'] = config.aws.endpoint;
+    }
+    this.client = new DynamoDBClient(dynamoClientConfig);
     this.dynamo = DynamoDBDocumentClient.from(this.client, {
       marshallOptions: {
         convertEmptyValues: true,

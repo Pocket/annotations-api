@@ -54,3 +54,8 @@ export type HighlightInput = {
   itemId: string;
   note?: string;
 };
+
+export type NoteInput = {
+  id: string;
+  input: string;
+};
