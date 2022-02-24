@@ -91,5 +91,28 @@ export const resolvers = {
         args.input
       );
     },
+    updateSavedItemHighlightNote: async (
+      _,
+      args: { id: string; input: string },
+      context: IContext
+    ): Promise<HighlightNote> => {
+      const dataService = new HighlightsDataService(context);
+      await dataService.getHighlightById(args.id);
+      return new NotesDataService(context.dynamoClient, context).upsert(
+        args.id,
+        args.input
+      );
+    },
+    // deleteSavedItemHighlightNote: async (
+    //   _,
+    //   args,
+    //   context: IContext
+    // ): Promise<string> => {
+    //   const dataService = await new HighlightsDataService(context);
+    //   await dataService.deleteHighlightById(args.id);
+    //   return new NotesDataService(context.dynamoClient, context).delete(
+    //     args.id
+    //   );
+    // },
   },
 };
