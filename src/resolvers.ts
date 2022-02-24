@@ -8,7 +8,6 @@ import {
 } from './types';
 import { HighlightsDataService } from './dataservices/highlights';
 import { NotesDataService } from './dataservices/notes';
-import { NotFoundError } from '@pocket-tools/apollo-utils';
 
 export const resolvers = {
   SavedItem: {
@@ -41,16 +40,19 @@ export const resolvers = {
       const highlights = await new HighlightsDataService(
         context
       ).createHighlight(args.input);
-      const notes = await Promise.all(
-        args.input.map((highlightInput, index) => {
-          if (highlightInput.note) {
-            return new NotesDataService(context.dynamoClient, context).create(
-              highlights[index].id,
-              highlightInput.note
-            );
-          }
-        })
-      );
+      const noteData = args.input.reduce((result, highlightInput, index) => {
+        if (highlightInput.note) {
+          result.push({ id: highlights[index].id, text: highlightInput.note });
+        }
+        return result;
+      }, [] as { id: string; text: string }[]);
+      let notes: HighlightNote[];
+      if (noteData.length > 0) {
+        notes = await new NotesDataService(
+          context.dynamoClient,
+          context
+        ).batchCreate(noteData);
+      }
       const returnHighlights = highlights.map((item, index) => {
         const tmpReturn = { ...item };
         if (args.input[index].note) tmpReturn.note = notes[index] ?? undefined;
@@ -81,17 +83,13 @@ export const resolvers = {
       _,
       args: { id: string; input: string },
       context: IContext
-    ): Promise<HighlightNote | Error> => {
+    ): Promise<HighlightNote> => {
       const dataService = new HighlightsDataService(context);
-      try {
-        await dataService.getHighlightById(args.id);
-        return new NotesDataService(context.dynamoClient, context).create(
-          args.id,
-          args.input
-        );
-      } catch (err) {
-        return err;
-      }
+      await dataService.getHighlightById(args.id);
+      return new NotesDataService(context.dynamoClient, context).create(
+        args.id,
+        args.input
+      );
     },
   },
 };

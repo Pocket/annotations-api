@@ -12,6 +12,7 @@ import config from '../../config';
 describe('Notes on a Highlight', () => {
   let server: ApolloServer;
   let contextStub;
+  let premiumStub;
   const userId = 1;
   const db = readClient();
   const now = new Date();
@@ -31,10 +32,12 @@ describe('Notes on a Highlight', () => {
     );
     await dynamodb.send(noteSeedCommand(now));
     contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
+    premiumStub = sinon.stub(ContextManager.prototype, 'isPremium').value(true);
     server = getServer();
   });
   afterAll(() => {
     contextStub.restore();
+    premiumStub.restore();
     client.destroy();
   });
   it('should return a highlight with note when available', async () => {

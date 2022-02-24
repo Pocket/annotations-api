@@ -151,20 +151,46 @@ export class NotesDataService {
     );
   }
 
-  // public async batchWrite(
-  //   notes: { id: string; text: string }[]
-  // ): Promise<HighlightNote[]> {
-  //   const noteRequests = notes.map((note) => {
-  //     return {
-  //       PutRequest: {
-  //         Item: this.toEntity(note.id, note.text),
-  //       },
-  //     };
-  //   });
-  //   const batchWriteCommand = new BatchWriteCommand({
-  //     RequestItems: {
-  //       [this.table.name]: noteRequests,
-  //     },
-  //   });
-  // }
+  public async batchCreate(
+    notes: { id: string; text: string }[]
+  ): Promise<HighlightNote[]> {
+    const noteEntities = notes.map((note) => this.toEntity(note.id, note.text));
+    const notePutRequests = noteEntities.map((note) => {
+      return {
+        PutRequest: {
+          Item: note,
+        },
+      };
+    });
+    let unprocessedItems: BatchWriteCommandInput['RequestItems'] = {
+      [this.table.name]: notePutRequests,
+    };
+    let tries = 0;
+    // Make requests until entire batch is completed, since size limits
+    // may require multiple batch requests
+    while (unprocessedItems) {
+      const batchWriteCommand = new BatchWriteCommand({
+        RequestItems: unprocessedItems,
+      });
+      // Exponential backoff between requests
+      if (tries > 0) {
+        await backoff(tries, config.aws.maxBackoff);
+      }
+      const response: BatchWriteCommandOutput = await this.dynamo.send(
+        batchWriteCommand
+      );
+      // Increment tries for backoff, and reset unprocessed writes list
+      tries += 1;
+      // Might get an empty object which is truthy in JS
+      if (
+        response.UnprocessedItems &&
+        Object.keys(response.UnprocessedItems).length > 0
+      ) {
+        unprocessedItems = response.UnprocessedItems;
+      } else {
+        unprocessedItems = undefined;
+      }
+    }
+    return noteEntities.map((entity) => this.toGraphQl(entity));
+  }
 }

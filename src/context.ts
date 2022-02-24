@@ -35,7 +35,7 @@ export class ContextManager implements IContext {
     this.config = config;
     this.dynamoClient = config.dynamoClient;
     this.dataLoaders = {
-      noteByHighlightId: createNotesLoader(config.dynamoClient),
+      noteByHighlightId: createNotesLoader(config.dynamoClient, this),
     };
   }
   dynamoClient: DynamoDBClient;

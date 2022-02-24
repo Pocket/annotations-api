@@ -2,6 +2,7 @@ import sinon from 'sinon';
 import { NotesDataService } from '../dataservices/notes';
 import { dynamoClient } from '../database/client';
 import { createNotesLoader, orderAndMapNotes } from './dataloaders';
+import { IContext } from '../context';
 
 describe('dataloaders', () => {
   const mockNotesResponse = [
@@ -43,7 +44,7 @@ describe('dataloaders', () => {
       notesStub = sinon
         .stub(NotesDataService.prototype, 'getMany')
         .resolves(mockNotesResponse);
-      notesLoader = createNotesLoader(dynamo);
+      notesLoader = createNotesLoader(dynamo, { isPremium: true } as IContext);
     });
     afterEach(() => {
       notesStub.restore();
