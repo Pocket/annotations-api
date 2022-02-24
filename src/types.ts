@@ -19,6 +19,7 @@ export type Highlight = {
   version: number;
   _createdAt: number;
   _updatedAt: number;
+  note?: HighlightNote;
 };
 
 export type HighlightNote = {
@@ -51,4 +52,10 @@ export type HighlightInput = {
   patch: string;
   version: number;
   itemId: string;
+  note?: string;
+};
+
+export type NoteInput = {
+  id: string;
+  input: string;
 };

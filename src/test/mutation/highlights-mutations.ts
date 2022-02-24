@@ -12,6 +12,21 @@ export const CREATE_HIGHLIGHTS = gql`
     }
   }
 `;
+export const CREATE_HIGHLIGHTS_WITH_NOTE = gql`
+  mutation CreateHighlights($input: [CreateHighlightInput!]!) {
+    createSavedItemHighlights(input: $input) {
+      id
+      patch
+      version
+      quote
+      _createdAt
+      _updatedAt
+      note {
+        text
+      }
+    }
+  }
+`;
 export const UPDATE_HIGHLIGHT = gql`
   mutation updateSavedItemHighlight($id: ID!, $input: CreateHighlightInput!) {
     updateSavedItemHighlight(id: $id, input: $input) {

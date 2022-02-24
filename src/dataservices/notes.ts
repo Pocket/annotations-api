@@ -1,4 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient,
   GetCommand,
@@ -6,17 +6,38 @@ import {
   BatchGetCommand,
   BatchGetCommandInput,
   BatchGetCommandOutput,
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  BatchWriteCommandOutput,
+  PutCommand,
+  PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
 import { HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
+import { IContext } from '../context';
+import { ForbiddenError } from 'apollo-server-errors';
 
 export class NotesDataService {
   // Easier to work with Document client since it abstracts the types
   public dynamo: DynamoDBDocumentClient;
   private table = config.dynamoDb.notesTable;
 
-  constructor(private client: DynamoDBClient) {
+  constructor(private client: DynamoDBClient, private context: IContext) {
+    if (!this.context.isPremium) {
+      throw new ForbiddenError(
+        'Premium account required to access this feature'
+      );
+    }
+
+    const dynamoClientConfig: DynamoDBClientConfig = {
+      region: config.aws.region,
+    };
+    // Set endpoint for local client, otherwise provider default
+    if (config.aws.endpoint != null) {
+      dynamoClientConfig['endpoint'] = config.aws.endpoint;
+    }
+    this.client = new DynamoDBClient(dynamoClientConfig);
     this.dynamo = DynamoDBDocumentClient.from(this.client, {
       marshallOptions: {
         convertEmptyValues: true,
@@ -32,6 +53,17 @@ export class NotesDataService {
       _createdAt: response[this.table._createdAt],
       _updatedAt: response[this.table._updatedAt],
     };
+  }
+
+  private toEntity(id: string, text: string): HighlightNoteEntity {
+    const timeStamp = new Date().getTime() / 1000;
+    const noteEntity = {
+      [this.table.key]: id,
+      [this.table.note]: text,
+      [this.table._createdAt]: timeStamp,
+      [this.table._updatedAt]: timeStamp,
+    } as HighlightNoteEntity;
+    return noteEntity;
   }
 
   /**
@@ -101,5 +133,64 @@ export class NotesDataService {
       }
     }
     return itemResults.map((item) => this.toGraphQl(item));
+  }
+
+  public async create(id: string, text: string): Promise<HighlightNote> {
+    const noteEntity = this.toEntity(id, text);
+    const putItemCommand = new PutCommand({
+      Item: noteEntity,
+      TableName: this.table.name,
+    });
+
+    const response: PutCommandOutput = await this.dynamo.send(putItemCommand);
+    if (response?.$metadata.httpStatusCode === 200) {
+      return this.toGraphQl(noteEntity as HighlightNoteEntity);
+    }
+    throw new Error(
+      `Unable to create highlight note (dynamoDB request ID = ${response?.$metadata.requestId}`
+    );
+  }
+
+  public async batchCreate(
+    notes: { id: string; text: string }[]
+  ): Promise<HighlightNote[]> {
+    const noteEntities = notes.map((note) => this.toEntity(note.id, note.text));
+    const notePutRequests = noteEntities.map((note) => {
+      return {
+        PutRequest: {
+          Item: note,
+        },
+      };
+    });
+    let unprocessedItems: BatchWriteCommandInput['RequestItems'] = {
+      [this.table.name]: notePutRequests,
+    };
+    let tries = 0;
+    // Make requests until entire batch is completed, since size limits
+    // may require multiple batch requests
+    while (unprocessedItems) {
+      const batchWriteCommand = new BatchWriteCommand({
+        RequestItems: unprocessedItems,
+      });
+      // Exponential backoff between requests
+      if (tries > 0) {
+        await backoff(tries, config.aws.maxBackoff);
+      }
+      const response: BatchWriteCommandOutput = await this.dynamo.send(
+        batchWriteCommand
+      );
+      // Increment tries for backoff, and reset unprocessed writes list
+      tries += 1;
+      // Might get an empty object which is truthy in JS
+      if (
+        response.UnprocessedItems &&
+        Object.keys(response.UnprocessedItems).length > 0
+      ) {
+        unprocessedItems = response.UnprocessedItems;
+      } else {
+        unprocessedItems = undefined;
+      }
+    }
+    return noteEntities.map((entity) => this.toGraphQl(entity));
   }
 }
