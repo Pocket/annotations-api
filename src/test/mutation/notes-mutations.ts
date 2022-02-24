@@ -15,3 +15,9 @@ export const UPDATE_NOTE = gql`
     }
   }
 `;
+
+export const DELETE_NOTE = gql`
+  mutation deleteSavedItemHighlightNote($id: ID!) {
+    deleteSavedItemHighlightNote(id: $id)
+  }
+`;
