@@ -13,7 +13,7 @@ import {
   PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
-import { Highlight, HighlightNote, HighlightNoteEntity } from '../types';
+import { HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
 import { IContext } from '../context';
 import { ForbiddenError } from 'apollo-server-errors';
