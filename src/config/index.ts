@@ -17,6 +17,7 @@ export default {
       process.env.NODE_ENV != 'production'
         ? process.env.AWS_ENDPOINT || 'http://localstack:4566'
         : undefined,
+    maxBackoff: 3000, // in ms, max amount of backoff time allowed for multiple requests
   },
   dynamoDb: {
     notesTable: {

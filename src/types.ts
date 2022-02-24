@@ -22,7 +22,7 @@ export type Highlight = {
 };
 
 export type HighlightNote = {
-  highlightId?: string;
+  highlightId: string;
   text: string;
   _createdAt: number;
   _updatedAt: number;
@@ -30,7 +30,7 @@ export type HighlightNote = {
 
 // In DynamoDB can't use underscore in projection expression
 export type HighlightNoteEntity = {
-  highlightId?: string;
+  highlightId: string;
   note: string; // text is reserved keyword
   createdAt: number;
   updatedAt: number;

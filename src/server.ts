@@ -10,7 +10,7 @@ import {
   ApolloServerPluginInlineTrace,
 } from 'apollo-server-core';
 import { ContextManager } from './context';
-import { readClient, writeClient } from './database/client';
+import { dynamoClient, readClient, writeClient } from './database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({
@@ -28,6 +28,7 @@ export function getServer(): ApolloServer {
       new ContextManager({
         request: req,
         db: { readClient: readClient(), writeClient: writeClient() },
+        dynamoClient: dynamoClient(),
       }),
   });
 }
