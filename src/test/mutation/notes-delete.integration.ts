@@ -49,7 +49,7 @@ describe('Notes delete', () => {
     });
     afterAll(() => premiumStub.restore());
     it('returns NOT_FOUND error if attempting to delete a note from a highlight that has no notes', async () => {
-      const variables = { id: '3' };
+      const variables = { id: '2' };
       const res = await server.executeOperation({
         query: DELETE_NOTE,
         variables,
