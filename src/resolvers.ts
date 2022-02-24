@@ -103,16 +103,16 @@ export const resolvers = {
         args.input
       );
     },
-    // deleteSavedItemHighlightNote: async (
-    //   _,
-    //   args,
-    //   context: IContext
-    // ): Promise<string> => {
-    //   const dataService = await new HighlightsDataService(context);
-    //   await dataService.deleteHighlightById(args.id);
-    //   return new NotesDataService(context.dynamoClient, context).delete(
-    //     args.id
-    //   );
-    // },
+    deleteSavedItemHighlightNote: async (
+      _,
+      args,
+      context: IContext
+    ): Promise<string> => {
+      const dataService = await new HighlightsDataService(context);
+      await dataService.deleteHighlightById(args.id);
+      return new NotesDataService(context.dynamoClient, context).delete(
+        args.id
+      );
+    },
   },
 };

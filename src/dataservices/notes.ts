@@ -12,12 +12,15 @@ import {
   UpdateCommand,
   PutCommand,
   PutCommandOutput,
+  DeleteCommand,
+  DeleteCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
 import { HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
 import { IContext } from '../context';
 import { ForbiddenError } from 'apollo-server-errors';
+import { NotFoundError } from '@pocket-tools/apollo-utils';
 
 export class NotesDataService {
   // Easier to work with Document client since it abstracts the types
@@ -216,5 +219,23 @@ export class NotesDataService {
       }
     }
     return noteEntities.map((entity) => this.toGraphQl(entity));
+  }
+
+  public async delete(id: string): Promise<string> {
+    const deleteItemCommand = new DeleteCommand({
+      Key: {
+        [this.table.key]: id,
+      },
+      ReturnValues: 'ALL_OLD',
+      TableName: this.table.name,
+    });
+
+    const response: DeleteCommandOutput = await this.dynamo.send(
+      deleteItemCommand
+    );
+    if (response.Attributes == null) {
+      throw new NotFoundError('Note does not exist on highlight');
+    }
+    return id;
   }
 }
