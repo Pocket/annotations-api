@@ -9,6 +9,7 @@ import {
   BatchWriteCommand,
   BatchWriteCommandInput,
   BatchWriteCommandOutput,
+  UpdateCommand,
   PutCommand,
   PutCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
@@ -149,6 +150,29 @@ export class NotesDataService {
     throw new Error(
       `Unable to create highlight note (dynamoDB request ID = ${response?.$metadata.requestId}`
     );
+  }
+
+  public async upsert(id: string, text: string): Promise<HighlightNote> {
+    const noteEntity = this.toEntity(id, text);
+    const updateItemCommand = new UpdateCommand({
+      Key: {
+        [this.table.key]: id,
+      },
+      UpdateExpression: `SET ${this.table._updatedAt} = :ua, ${this.table.note} = :tx, ${this.table._createdAt} = if_not_exists(${this.table._createdAt}, :ca)`,
+      ExpressionAttributeValues: {
+        ':ua': noteEntity.updatedAt,
+        ':tx': noteEntity.note,
+        ':ca': noteEntity.createdAt,
+      },
+      ReturnValues: 'ALL_NEW',
+      TableName: this.table.name,
+    });
+    const result = await this.dynamo.send(updateItemCommand);
+    const updatedEntity = result.Attributes as Omit<
+      HighlightNoteEntity,
+      'highlightId'
+    >;
+    return this.toGraphQl({ highlightId: id, ...updatedEntity });
   }
 
   public async batchCreate(

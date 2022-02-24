@@ -7,3 +7,11 @@ export const CREATE_NOTE = gql`
     }
   }
 `;
+
+export const UPDATE_NOTE = gql`
+  mutation updateSavedItemHighlightNote($id: ID!, $input: String!) {
+    updateSavedItemHighlightNote(id: $id, input: $input) {
+      text
+    }
+  }
+`;
