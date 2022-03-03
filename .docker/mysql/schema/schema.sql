@@ -25,3 +25,17 @@ CREATE TABLE IF NOT EXISTS `list` (
   `item_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`user_id`,`item_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+
+-- this table stores timestamps for changes to various entities
+-- stores changes to highlights for this service
+CREATE TABLE `users_meta` (
+  `user_id` int(10) unsigned NOT NULL,
+  `property` tinyint(3) unsigned NOT NULL,
+  `value` text NOT NULL,
+  `time_updated` datetime NOT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`,`property`,`time_updated`),
+  KEY `property` (`property`),
+  KEY `time_updated` (`time_updated`),
+  KEY `updated_at` (`updated_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;

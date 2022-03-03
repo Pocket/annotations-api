@@ -9,6 +9,10 @@ import {
   CREATE_HIGHLIGHTS_WITH_NOTE,
 } from './highlights-mutations';
 import { HighlightInput } from '../../types';
+import { UsersMeta } from '../../dataservices/usersMeta';
+import { mysqlTimeString } from '../../dataservices/utils';
+import config from '../../config';
+
 describe('Highlights creation', () => {
   let server: ApolloServer;
   // Stubs/mocks
@@ -31,8 +35,9 @@ describe('Highlights creation', () => {
     contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
     server = getServer();
   });
-  afterAll(() => {
+  afterAll(async () => {
     contextStub.restore();
+    await db.destroy();
   });
   describe('any user', () => {
     beforeEach(async () => {
@@ -98,6 +103,37 @@ describe('Highlights creation', () => {
 
       expect(result.length).toEqual(1);
       expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
+    });
+
+    it('should log the highlight mutation', async () => {
+      const updateDate = new Date(2022, 3, 3);
+      const clock = sinon.useFakeTimers({
+        now: updateDate,
+        shouldAdvanceTime: false,
+      });
+
+      const variables: { input: HighlightInput[] } = {
+        input: [
+          {
+            itemId: '3',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+          },
+        ],
+      };
+      await server.executeOperation({
+        query: CREATE_HIGHLIGHTS,
+        variables,
+      });
+
+      const res = await db('users_meta')
+        .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
+        .pluck('value');
+
+      expect(res[0]).toEqual(mysqlTimeString(updateDate, config.database.tz));
+
+      clock.restore();
     });
   });
   describe('non-premium users', () => {

@@ -6,6 +6,9 @@ import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { DELETE_HIGHLIGHT } from './highlights-mutations';
 import { HighlightEntity } from '../../types';
+import { UsersMeta } from '../../dataservices/usersMeta';
+import { mysqlTimeString } from '../../dataservices/utils';
+import config from '../../config';
 
 describe('Highlights deletion', () => {
   let server: ApolloServer;
@@ -37,18 +40,32 @@ describe('Highlights deletion', () => {
   });
 
   it('should delete an existing highlight', async () => {
+    const updateDate = new Date(2022, 3, 3);
+    const clock = sinon.useFakeTimers({
+      now: updateDate,
+      shouldAdvanceTime: false,
+    });
+
     const variables = { id: '1' };
     const res = await server.executeOperation({
       query: DELETE_HIGHLIGHT,
       variables,
     });
-    const dbRecord = await db<HighlightEntity>('user_annotations')
+    const annotationRecord = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
+    const usersMetaRecord = await db('users_meta')
+      .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
+      .pluck('value');
 
     expect(res).toBeTruthy();
     expect(res?.data?.deleteSavedItemHighlight).toBe(variables.id);
-    expect(dbRecord[0].status).toBe(0);
+    expect(annotationRecord[0].status).toBe(0);
+    expect(usersMetaRecord[0]).toEqual(
+      mysqlTimeString(updateDate, config.database.tz)
+    );
+
+    clock.restore();
   });
 
   it('should throw NOT_FOUND error if the highlight ID does not exist', async () => {
