@@ -6,54 +6,19 @@ import { v4 as uuid } from 'uuid';
 import config from '../config';
 import { UserInputError } from 'apollo-server-errors';
 import { groupByCount, sumByKey } from '../utils/dataAggregation';
+import { UsersMeta } from './usersMeta';
 
 export class HighlightsDataService {
   public readonly userId: string;
   public readonly readDb: Knex;
   public readonly writeDb: Knex;
+  private readonly usersMetaService: UsersMeta;
 
   constructor(private context: IContext) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
     this.writeDb = context.db.writeClient;
-  }
-  private toGraphql(entity: HighlightEntity): Highlight {
-    return {
-      id: entity.annotation_id,
-      quote: entity.quote,
-      patch: entity.patch,
-      version: entity.version,
-      _createdAt: entity.created_at.getTime() / 1000,
-      _updatedAt: entity.updated_at.getTime() / 1000,
-    };
-  }
-
-  /**
-   * Convert Create or Update highlight input to database entity
-   * that can be inserted/updated.
-   * Status is set to 1, so should not be used to delete or modify
-   * deleted highlights.
-   * If an ID is not provided, a UUID will be auto-generated.
-   * @param input HighlightInput from create or update mutation
-   * @param id Optional string ID, for updating an existing highlight.
-   * If provided, will use this ID instead of generating a new one.
-   * @returns HighlightEntity object (minus DB default fields created_at
-   * and updated_at) which can be used for insert/updating the highlight
-   * entry in the table.
-   */
-  private toDbEntity(
-    input: HighlightInput,
-    id?: string
-  ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
-    return {
-      annotation_id: id ?? uuid(),
-      user_id: parseInt(this.userId),
-      item_id: parseInt(input.itemId),
-      quote: input.quote,
-      patch: input.patch,
-      version: input.version,
-      status: 1,
-    };
+    this.usersMetaService = new UsersMeta(context);
   }
 
   async highlightsCountByItemIds(
@@ -71,14 +36,12 @@ export class HighlightsDataService {
       return acc;
     }, {});
   }
+
   /**
    * Get highlights associated with an item in a user's list
-   * @param itemid the itemId in the user's list
-   * @throws NotFoundError if the itemId doesn't exist in the user's list
-   * Get highlights associated with an item in a user's list
-   * @param itemid the itemId in the user's list
-   * @returns a list of Highlights associated to the itemId, or an empty list
    * if there are no highlights on a given itemId
+   * @param itemId the itemId in the user's list
+   * @throws NotFoundError if the itemId doesn't exist in the user's list
    */
   async getHighlightsByItemId(itemId: string): Promise<Highlight[]> {
     const rows = await this.readDb<HighlightEntity>('user_annotations')
@@ -146,34 +109,57 @@ export class HighlightsDataService {
     const formattedHighlights = highlightInput.map((highlight) =>
       this.toDbEntity(highlight)
     );
-    // Insert into the db
-    await this.readDb<HighlightEntity>('user_annotations').insert(
-      formattedHighlights
+
+    const rows = await this.writeDb.transaction(
+      async (trx: Knex.Transaction) => {
+        // Insert into the db
+        await trx<HighlightEntity>('user_annotations').insert(
+          formattedHighlights
+        );
+        // Update users_meta table
+        await this.usersMetaService.logAnnotationMutation(new Date(), trx);
+
+        // Query back the inserted rows
+        return trx<HighlightEntity>('user_annotations')
+          .select()
+          .whereIn(
+            'annotation_id',
+            formattedHighlights.map((highlight) => highlight.annotation_id)
+          );
+      }
     );
-    // Query back the inserted rows
-    const rows = await this.readDb<HighlightEntity>('user_annotations')
-      .select()
-      .whereIn(
-        'annotation_id',
-        formattedHighlights.map((highlight) => highlight.annotation_id)
-      );
+
     return rows.map(this.toGraphql);
   }
+
+  /**
+   * Update highlight for a given ID
+   * @param id
+   * @param input
+   */
   async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {
     const annotation = await this.getHighlightById(id);
 
-    await this.writeDb('user_annotations')
-      .update({
-        quote: input.quote,
-        patch: input.patch,
-        version: input.version,
-        item_id: input.itemId,
-        updated_at: new Date(),
-      })
-      .where('annotation_id', annotation.id)
-      .andWhere('user_id', this.userId);
+    await this.writeDb.transaction(async (trx: Knex.Transaction) => {
+      await trx('user_annotations')
+        .update({
+          quote: input.quote,
+          patch: input.patch,
+          version: input.version,
+          item_id: input.itemId,
+          updated_at: new Date(),
+        })
+        .where('annotation_id', annotation.id)
+        .andWhere('user_id', this.userId);
+      // Update users_meta table
+      await this.usersMetaService.logAnnotationMutation(new Date(), trx);
+    });
   }
 
+  /**
+   * Get highlight for a given ID
+   * @param id
+   */
   async getHighlightById(id: string): Promise<Highlight> {
     const row = (await this.readDb<HighlightEntity>('user_annotations')
       .select()
@@ -188,16 +174,69 @@ export class HighlightsDataService {
     return this.toGraphql(row);
   }
 
+  /**
+   * Delete highlight for a given ID
+   * @param highlightId
+   */
   async deleteHighlightById(highlightId: string): Promise<string> {
-    // This will throw and error if it doesn't like you
-    const rowCount = await this.writeDb<HighlightEntity>('user_annotations')
-      .update({ status: 0 })
-      .where('user_id', this.userId)
-      .andWhere('annotation_id', highlightId);
+    return await this.writeDb.transaction(async (trx: Knex.Transaction) => {
+      // This will throw and error if it doesn't like you
+      const rowCount = await this.writeDb<HighlightEntity>('user_annotations')
+        .update({ status: 0 })
+        .where('user_id', this.userId)
+        .andWhere('annotation_id', highlightId);
 
-    // If no row is found throw an error
-    if (!rowCount) throw new NotFoundError('Highlight not found');
+      // If no row is found throw an error
+      if (!rowCount) throw new NotFoundError('Highlight not found');
 
-    return highlightId;
+      // Update users_meta table
+      await this.usersMetaService.logAnnotationMutation(new Date(), trx);
+
+      return highlightId;
+    });
+  }
+
+  /**
+   * Convert DB object type to the GraphQL schema type
+   * @param entity
+   * @private
+   */
+  private toGraphql(entity: HighlightEntity): Highlight {
+    return {
+      id: entity.annotation_id,
+      quote: entity.quote,
+      patch: entity.patch,
+      version: entity.version,
+      _createdAt: entity.created_at.getTime() / 1000,
+      _updatedAt: entity.updated_at.getTime() / 1000,
+    };
+  }
+
+  /**
+   * Convert Create or Update highlight input to database entity
+   * that can be inserted/updated.
+   * Status is set to 1, so should not be used to delete or modify
+   * deleted highlights.
+   * If an ID is not provided, a UUID will be auto-generated.
+   * @param input HighlightInput from create or update mutation
+   * @param id Optional string ID, for updating an existing highlight.
+   * If provided, will use this ID instead of generating a new one.
+   * @returns HighlightEntity object (minus DB default fields created_at
+   * and updated_at) which can be used for insert/updating the highlight
+   * entry in the table.
+   */
+  private toDbEntity(
+    input: HighlightInput,
+    id?: string
+  ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
+    return {
+      annotation_id: id ?? uuid(),
+      user_id: parseInt(this.userId),
+      item_id: parseInt(input.itemId),
+      quote: input.quote,
+      patch: input.patch,
+      version: input.version,
+      status: 1,
+    };
   }
 }

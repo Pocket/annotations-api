@@ -6,6 +6,9 @@ import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { UPDATE_HIGHLIGHT } from './highlights-mutations';
 import { HighlightEntity, HighlightInput } from '../../types';
+import { UsersMeta } from '../../dataservices/usersMeta';
+import { mysqlTimeString } from '../../dataservices/utils';
+import config from '../../config';
 
 describe('Highlights update', () => {
   let server: ApolloServer;
@@ -33,6 +36,12 @@ describe('Highlights update', () => {
     await truncateAndSeed();
   });
   it('should update an existing highlight owned by the user', async () => {
+    const updateDate = new Date(2022, 3, 3);
+    const clock = sinon.useFakeTimers({
+      now: updateDate,
+      shouldAdvanceTime: false,
+    });
+
     const input = {
       itemId: '1',
       version: 2,
@@ -49,11 +58,20 @@ describe('Highlights update', () => {
       variables,
     });
 
+    const usersMetaRecord = await db('users_meta')
+      .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
+      .pluck('value');
+
     expect(res?.data?.updateSavedItemHighlight).toBeTruthy();
     expect(res?.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
     expect(res?.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
     expect(res?.data?.updateSavedItemHighlight.version).toEqual(input.version);
     expect(res?.data?.updateSavedItemHighlight.id).toEqual(id);
+    expect(usersMetaRecord[0]).toEqual(
+      mysqlTimeString(updateDate, config.database.tz)
+    );
+
+    clock.restore();
   });
   it('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
     const variables: { id: string; input: HighlightInput } = {
