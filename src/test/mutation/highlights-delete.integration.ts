@@ -57,11 +57,17 @@ describe('Highlights deletion', () => {
     const usersMetaRecord = await db('users_meta')
       .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
       .pluck('value');
+    const listRecord = await db('list')
+      .where({ user_id: '1', item_id: '1' })
+      .pluck('time_updated');
 
     expect(res).toBeTruthy();
     expect(res?.data?.deleteSavedItemHighlight).toBe(variables.id);
     expect(annotationRecord[0].status).toBe(0);
     expect(usersMetaRecord[0]).toEqual(
+      mysqlTimeString(updateDate, config.database.tz)
+    );
+    expect(mysqlTimeString(listRecord[0])).toEqual(
       mysqlTimeString(updateDate, config.database.tz)
     );
 
@@ -79,7 +85,7 @@ describe('Highlights deletion', () => {
 
     if (res?.errors) {
       expect(res?.errors[0].message).toBe(
-        'Error - Not Found: Highlight not found'
+        'Error - Not Found: No annotation found for the given ID'
       );
     }
   });

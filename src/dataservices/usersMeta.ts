@@ -22,7 +22,7 @@ export class UsersMeta {
   /**
    * Log the last time an annotation mutation occurred.
    * There should only be one entry for the unique combination of user_id:property
-   * Since this should only be updated as a side-effect of another mutation, require
+   * Since this should only be updated as a side effect of another mutation, require
    * a transaction object to conduct the entire operation atomically.
    * @param timestamp timestamp server processed mutation
    * @param trx

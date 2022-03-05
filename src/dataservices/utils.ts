@@ -23,7 +23,8 @@ export async function backoff(tries: number, cap: number) {
  * @param timestamp the date object to localize and return as string
  * @param tz the timezone string for the timezone
  */
-export function mysqlTimeString(timestamp: Date, tz: string): string {
-  const dt = DateTime.fromMillis(timestamp.getTime()).setZone(tz);
+export function mysqlTimeString(timestamp: Date, tz?: string): string {
+  const dt = DateTime.fromMillis(timestamp.getTime());
+  if (tz) dt.setZone(tz);
   return dt.toFormat('yyyy-MM-dd HH:mm:ss');
 }

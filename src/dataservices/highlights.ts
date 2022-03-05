@@ -7,18 +7,21 @@ import config from '../config';
 import { UserInputError } from 'apollo-server-errors';
 import { groupByCount, sumByKey } from '../utils/dataAggregation';
 import { UsersMeta } from './usersMeta';
+import { SavedItem } from './savedItem';
 
 export class HighlightsDataService {
   public readonly userId: string;
   public readonly readDb: Knex;
   public readonly writeDb: Knex;
   private readonly usersMetaService: UsersMeta;
+  private readonly savedItemService: SavedItem;
 
   constructor(private context: IContext) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
     this.writeDb = context.db.writeClient;
     this.usersMetaService = new UsersMeta(context);
+    this.savedItemService = new SavedItem(context);
   }
 
   async highlightsCountByItemIds(
@@ -116,8 +119,21 @@ export class HighlightsDataService {
         await trx<HighlightEntity>('user_annotations').insert(
           formattedHighlights
         );
+
+        const updateDate = new Date();
+        // Mark saved item(s) as updated
+        // There could be more than one, update all respective saved items
+        await Promise.all(
+          highlightInput.map(async (input) => {
+            await this.savedItemService.markUpdate(
+              input.itemId,
+              updateDate,
+              trx
+            );
+          })
+        );
         // Update users_meta table
-        await this.usersMetaService.logAnnotationMutation(new Date(), trx);
+        await this.usersMetaService.logAnnotationMutation(updateDate, trx);
 
         // Query back the inserted rows
         return trx<HighlightEntity>('user_annotations')
@@ -151,16 +167,31 @@ export class HighlightsDataService {
         })
         .where('annotation_id', annotation.id)
         .andWhere('user_id', this.userId);
+
+      const updateDate = new Date();
+      // Mark saved item as updated
+      await this.savedItemService.markUpdate(input.itemId, updateDate, trx);
       // Update users_meta table
-      await this.usersMetaService.logAnnotationMutation(new Date(), trx);
+      await this.usersMetaService.logAnnotationMutation(updateDate, trx);
     });
   }
 
   /**
-   * Get highlight for a given ID
+   * Get highlight for a given ID and format returned data to match GraphQL spec
    * @param id
    */
   async getHighlightById(id: string): Promise<Highlight> {
+    const row = await this.getHighlightByIdQuery(id);
+
+    return this.toGraphql(row);
+  }
+
+  /**
+   * Get highlight by a given ID
+   * @param id
+   * @private
+   */
+  private async getHighlightByIdQuery(id: string): Promise<HighlightEntity> {
     const row = (await this.readDb<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', id)
@@ -171,7 +202,7 @@ export class HighlightsDataService {
       throw new NotFoundError('No annotation found for the given ID');
     }
 
-    return this.toGraphql(row);
+    return row;
   }
 
   /**
@@ -179,18 +210,24 @@ export class HighlightsDataService {
    * @param highlightId
    */
   async deleteHighlightById(highlightId: string): Promise<string> {
+    const annotation = await this.getHighlightByIdQuery(highlightId);
+
     return await this.writeDb.transaction(async (trx: Knex.Transaction) => {
       // This will throw and error if it doesn't like you
-      const rowCount = await this.writeDb<HighlightEntity>('user_annotations')
+      await this.writeDb<HighlightEntity>('user_annotations')
         .update({ status: 0 })
         .where('user_id', this.userId)
         .andWhere('annotation_id', highlightId);
 
-      // If no row is found throw an error
-      if (!rowCount) throw new NotFoundError('Highlight not found');
-
+      const updateDate = new Date();
+      // Mark saved item as updated
+      await this.savedItemService.markUpdate(
+        annotation.item_id.toString(),
+        updateDate,
+        trx
+      );
       // Update users_meta table
-      await this.usersMetaService.logAnnotationMutation(new Date(), trx);
+      await this.usersMetaService.logAnnotationMutation(updateDate, trx);
 
       return highlightId;
     });
