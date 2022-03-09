@@ -105,7 +105,7 @@ describe('Highlights creation', () => {
       expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
     });
 
-    it('should log the highlight mutation', async () => {
+    it('should mark the list item as updated and log the highlight mutation', async () => {
       const updateDate = new Date(2022, 3, 3);
       const clock = sinon.useFakeTimers({
         now: updateDate,
@@ -127,11 +127,20 @@ describe('Highlights creation', () => {
         variables,
       });
 
-      const res = await db('users_meta')
+      const usersMetaRecord = await db('users_meta')
         .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
         .pluck('value');
 
-      expect(res[0]).toEqual(mysqlTimeString(updateDate, config.database.tz));
+      const listRecord = await db('list')
+        .where({ user_id: '1', item_id: '3' })
+        .pluck('time_updated');
+
+      expect(mysqlTimeString(listRecord[0])).toEqual(
+        mysqlTimeString(updateDate, config.database.tz)
+      );
+      expect(usersMetaRecord[0]).toEqual(
+        mysqlTimeString(updateDate, config.database.tz)
+      );
 
       clock.restore();
     });

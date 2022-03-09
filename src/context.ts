@@ -8,6 +8,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { createNotesLoader } from './dataservices/dataloaders';
 
 export interface IContext {
+  apiId: string;
   userId: string;
   isPremium: boolean;
   db: {
@@ -43,6 +44,7 @@ export class ContextManager implements IContext {
     // Using getter to make it easier to stub in tests
     return this.config.request?.headers.premium ?? false;
   }
+
   get userId(): string {
     const userId = this.config.request.headers.userid;
 
@@ -54,13 +56,18 @@ export class ContextManager implements IContext {
 
     return userId instanceof Array ? userId[0] : userId;
   }
+
+  get apiId(): string {
+    const apiId = this.config.request?.headers?.apiid || '0';
+
+    return apiId instanceof Array ? apiId[0] : apiId;
+  }
 }
 
 /**
  * Context factory function. Creates a new context upon
  * every request
  * @param req server request
- * @param emitter a pre-initialized itemsEventEmitter
  * @returns ContextManager
  */
 export function getContext(req: Request): ContextManager {

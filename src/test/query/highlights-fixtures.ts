@@ -70,8 +70,8 @@ export const seedData = (now) => ({
     },
   ],
   list: [
-    { item_id: 1, user_id: 1 },
-    { item_id: 2, user_id: 1 },
-    { item_id: 3, user_id: 1 }, // no highlights
+    { item_id: 1, user_id: 1, time_updated: now, api_id_updated: 0 },
+    { item_id: 2, user_id: 1, time_updated: now, api_id_updated: 0 },
+    { item_id: 3, user_id: 1, time_updated: now, api_id_updated: 0 }, // no highlights
   ],
 });

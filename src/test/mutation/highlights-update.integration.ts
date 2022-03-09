@@ -61,6 +61,9 @@ describe('Highlights update', () => {
     const usersMetaRecord = await db('users_meta')
       .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
       .pluck('value');
+    const listRecord = await db('list')
+      .where({ user_id: '1', item_id: '1' })
+      .pluck('time_updated');
 
     expect(res?.data?.updateSavedItemHighlight).toBeTruthy();
     expect(res?.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
@@ -68,6 +71,9 @@ describe('Highlights update', () => {
     expect(res?.data?.updateSavedItemHighlight.version).toEqual(input.version);
     expect(res?.data?.updateSavedItemHighlight.id).toEqual(id);
     expect(usersMetaRecord[0]).toEqual(
+      mysqlTimeString(updateDate, config.database.tz)
+    );
+    expect(mysqlTimeString(listRecord[0])).toEqual(
       mysqlTimeString(updateDate, config.database.tz)
     );
 

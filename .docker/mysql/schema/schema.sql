@@ -23,7 +23,11 @@ CREATE TABLE `user_annotations` (
 CREATE TABLE IF NOT EXISTS `list` (
   `user_id` int(10) unsigned NOT NULL,
   `item_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`user_id`,`item_id`)
+  `time_updated` datetime NOT NULL,
+  `api_id_updated` mediumint(8) unsigned NOT NULL,
+  PRIMARY KEY (`user_id`,`item_id`),
+  KEY `time_updated` (`time_updated`),
+  KEY `api_id_updated` (`api_id_updated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 -- this table stores timestamps for changes to various entities
