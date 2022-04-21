@@ -20,10 +20,7 @@ import {
   PocketPagerDuty,
   PocketVPC,
 } from '@pocket-tools/terraform-modules';
-import {
-  PagerdutyProvider,
-  DataPagerdutyEscalationPolicy,
-} from '@cdktf/provider-pagerduty';
+import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
 import { NullProvider } from '@cdktf/provider-null';
 import { DynamoDB } from './dynamodb';
@@ -154,22 +151,15 @@ class AnnotationsAPI extends TerraformStack {
       }
     );
 
-    const pocketBackendTeamCriticalEscalation =
-      new DataPagerdutyEscalationPolicy(this, 'policy_backend_critical', {
-        name: 'Pocket Backend: Critical',
-      });
-
-    const pocketBackendTeamNonCriticalEscalation =
-      new DataPagerdutyEscalationPolicy(this, 'policy_backend_non_critical', {
-        name: 'Pocket Backend: Non-Critical',
-      });
-
     return new PocketPagerDuty(this, 'pagerduty', {
       prefix: config.prefix,
       service: {
-        criticalEscalationPolicyId: pocketBackendTeamCriticalEscalation.id,
-        nonCriticalEscalationPolicyId:
-          pocketBackendTeamNonCriticalEscalation.id,
+        criticalEscalationPolicyId: incidentManagement
+          .get('policy_backend_critical_id')
+          .toString(),
+        nonCriticalEscalationPolicyId: incidentManagement
+          .get('policy_backend_non_critical_id')
+          .toString(),
       },
     });
   }
