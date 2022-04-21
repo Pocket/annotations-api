@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   localstack:
-    image: localstack/localstack@sha256:7f73f166e842f8480673f3c113b14350fa9db72960335e27e3be007f100272c4
+    image: localstack/localstack@sha256:5d9f3f5fcf398480610539bcb20146a2d866a2111105d66fafd8ff928bbae61a
     env_file:
       - .docker/local.env
     ports:
@@ -31,12 +31,12 @@ services:
       - TZ=US/Central
 
   redis:
-    image: redis:latest@sha256:69a3ab2516b560690e37197b71bc61ba245aafe4525ebdece1d8a0bc5669e3e2
+    image: redis:latest@sha256:b7fd1a2c89d09a836f659d72c52d27b9f71202c97014a47639f87c992e8c0f1b
     ports:
       - '6379:6379'
 
   app:
-    image: node:16@sha256:ffe804d6fcced29bcfc3477de079d03a9c2b0e4917e44bfeafb1a6b0f875e383
+    image: node:16@sha256:6e54786b2ad01667d46524e82806298714f50d2be72b39706770aed55faedbd7
     working_dir: /app
     ports:
       - '4008:4008'
