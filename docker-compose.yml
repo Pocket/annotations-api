@@ -36,7 +36,7 @@ services:
       - '6379:6379'
 
   app:
-    image: node:16@sha256:62b256c1b30587cdfdfdb10879de6e08ed240c1d5c0ffa190e764d7155cb0ab1
+    image: node:16@sha256:040f0041f373b872246e3cb33f5192e2852dde03f90fe137892ed3036760d2c7
     working_dir: /app
     ports:
       - '4008:4008'
