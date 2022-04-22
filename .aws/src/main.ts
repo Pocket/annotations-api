@@ -154,12 +154,12 @@ class AnnotationsAPI extends TerraformStack {
     return new PocketPagerDuty(this, 'pagerduty', {
       prefix: config.prefix,
       service: {
-        criticalEscalationPolicyId: incidentManagement.get(
-          'policy_backend_critical_id'
-        ),
-        nonCriticalEscalationPolicyId: incidentManagement.get(
-          'policy_backend_non_critical_id'
-        ),
+        criticalEscalationPolicyId: incidentManagement
+          .get('policy_backend_critical_id')
+          .toString(),
+        nonCriticalEscalationPolicyId: incidentManagement
+          .get('policy_backend_non_critical_id')
+          .toString(),
       },
     });
   }
@@ -296,6 +296,12 @@ class AnnotationsAPI extends TerraformStack {
         useCodeDeploy: true,
         useCodePipeline: true,
         snsNotificationTopicArn: snsTopic.arn,
+        notifications: {
+          //only notify on failed deploys
+          notifyOnFailed: true,
+          notifyOnStarted: false,
+          notifyOnSucceeded: false,
+        },
       },
       exposedContainer: {
         name: 'app',
