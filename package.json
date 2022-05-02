@@ -62,7 +62,7 @@
     "eslint-plugin-prettier": "4.0.0",
     "jest": "27.5.1",
     "nock": "13.2.4",
-    "nodemon": "2.0.15",
+    "nodemon": "2.0.16",
     "prettier": "2.5.1",
     "sinon": "11.1.2",
     "ts-jest": "27.1.4",
