@@ -24,6 +24,7 @@ import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
 import { NullProvider } from '@cdktf/provider-null';
 import { DynamoDB } from './dynamodb';
+import { SqsLambda } from './SqsLambda';
 
 class AnnotationsAPI extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -68,6 +69,8 @@ class AnnotationsAPI extends TerraformStack {
     readerEndpoint: string;
   } {
     const pocketVPC = new PocketVPC(scope, 'pocket-vpc');
+
+    new SqsLambda(this, 'sqs-event-consumer', pocketVPC);
 
     const elasticache = new ApplicationRedis(scope, 'redis', {
       //Usually we would set the security group ids of the service that needs to hit this.
