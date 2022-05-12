@@ -23,6 +23,7 @@ import {
 import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
 import { NullProvider } from '@cdktf/provider-null';
+import { ArchiveProvider } from '@cdktf/provider-archive';
 import { DynamoDB } from './dynamodb';
 import { SqsLambda } from './SqsLambda';
 
@@ -34,6 +35,7 @@ class AnnotationsAPI extends TerraformStack {
     new PagerdutyProvider(this, 'pagerduty_provider', { token: undefined });
     new LocalProvider(this, 'local_provider');
     new NullProvider(this, 'null_provider');
+    new ArchiveProvider(this, 'archive-provider');
 
     new RemoteBackend(this, {
       hostname: 'app.terraform.io',
@@ -43,8 +45,11 @@ class AnnotationsAPI extends TerraformStack {
 
     const region = new DataAwsRegion(this, 'region');
     const caller = new DataAwsCallerIdentity(this, 'caller');
-    const cache = AnnotationsAPI.createElasticache(this);
+    const pocketVPC = new PocketVPC(this, 'pocket-vpc');
+    const cache = AnnotationsAPI.createElasticache(this, pocketVPC);
     const dynamodb = new DynamoDB(this, 'dynamodb');
+
+    new SqsLambda(this, 'sqs-event-consumer', pocketVPC);
 
     const pocketApp = this.createPocketAlbApplication({
       pagerDuty: this.createPagerDuty(),
@@ -64,14 +69,13 @@ class AnnotationsAPI extends TerraformStack {
    * @param scope
    * @private
    */
-  private static createElasticache(scope: Construct): {
+  private static createElasticache(
+    scope: Construct,
+    vpc: PocketVPC
+  ): {
     primaryEndpoint: string;
     readerEndpoint: string;
   } {
-    const pocketVPC = new PocketVPC(scope, 'pocket-vpc');
-
-    new SqsLambda(this, 'sqs-event-consumer', pocketVPC);
-
     const elasticache = new ApplicationRedis(scope, 'redis', {
       //Usually we would set the security group ids of the service that needs to hit this.
       //However we don't have the necessary security group because it gets created in PocketALBApplication
@@ -83,9 +87,9 @@ class AnnotationsAPI extends TerraformStack {
         count: config.cacheNodes,
         size: config.cacheSize,
       },
-      subnetIds: pocketVPC.privateSubnetIds,
+      subnetIds: vpc.privateSubnetIds,
       tags: config.tags,
-      vpcId: pocketVPC.vpc.id,
+      vpcId: vpc.vpc.id,
       prefix: config.prefix,
     });
 
@@ -388,5 +392,4 @@ class AnnotationsAPI extends TerraformStack {
 
 const app = new App();
 new AnnotationsAPI(app, 'annotations-api');
-// TODO: Fix the terraform version. @See https://github.com/Pocket/recommendation-api/pull/333
 app.synth();
