@@ -38,7 +38,8 @@
     "aws-xray-sdk-express": "3.3.5",
     "dataloader": "^2.0.0",
     "knex": "^1.0.2",
-    "luxon": "^2.3.1"
+    "luxon": "^2.3.1",
+    "mysql": "^2.18.1"
   },
   "devDependencies": {
     "@pocket-tools/eslint-config": "^1.1.0",
