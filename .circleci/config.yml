@@ -297,6 +297,8 @@ workflows:
           env_lower_name: dev
           env_capital_name: Dev
           deploy: true
+          requires:
+            - deploy_dev
 
       # Build & Deploy Production Lambdas
       - lambda:
@@ -306,6 +308,8 @@ workflows:
           env_lower_name: prod
           env_capital_name: Prod
           deploy: true
+          requires:
+            - deploy_prod
 
       - apollo
 
