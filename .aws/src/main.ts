@@ -181,7 +181,6 @@ class AnnotationsAPI extends TerraformStack {
     dynamodb: DynamoDB;
   }): PocketALBApplication {
     const {
-      pagerDuty,
       region,
       caller,
       secretsManagerKmsAlias,
