@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   localstack:
-    image: localstack/localstack@sha256:a5e55f67644ecd567b3056cd1f57f5cc024d667b34259b8ac7e26d5ce7535ad5
+    image: localstack/localstack@sha256:962add2fa1c89031a35829291813aa6ee38d0af429fb936af50528520756502f
     env_file:
       - .docker/local.env
     ports:
