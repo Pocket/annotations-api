@@ -350,6 +350,9 @@ class AnnotationsAPI extends TerraformStack {
               'dynamodb:Query',
               'dynamodb:Scan',
               'dynamodb:UpdateItem',
+              'dynamodb:BatchWrite*',
+              'dynamodb:Delete*',
+              'dynamodb:PutItem',
             ],
             resources: [
               dynamodb.highlightNotesTable.dynamodb.arn,
