@@ -23,7 +23,7 @@
   "license": "ISC",
   "homepage": "https://github.com/Pocket/annotations-api#readme",
   "dependencies": {
-    "@apollo/federation": "0.33.9",
+    "@apollo/subgraph": "2.0.3",
     "@aws-sdk/client-dynamodb": "3.95.0",
     "@aws-sdk/lib-dynamodb": "3.95.0",
     "@pocket-tools/apollo-utils": "2.2.0",
@@ -37,7 +37,6 @@
     "aws-xray-sdk-core": "3.3.5",
     "aws-xray-sdk-express": "3.3.5",
     "dataloader": "2.1.0",
-    "graphql": "15.8.0",
     "knex": "1.0.7",
     "luxon": "2.4.0",
     "mysql": "2.18.1"
@@ -53,7 +52,6 @@
     "jest": "27.5.1",
     "nock": "13.2.4",
     "nodemon": "2.0.16",
-    "prettier": "2.5.1",
     "sinon": "11.1.2",
     "ts-jest": "27.1.5",
     "ts-node": "10.7.0"

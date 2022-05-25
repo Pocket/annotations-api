@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './typeDefs';
 import { resolvers } from './resolvers';
-import { buildSubgraphSchema } from '@apollo/federation';
+import { buildSubgraphSchema } from '@apollo/subgraph';
 import { sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground,
