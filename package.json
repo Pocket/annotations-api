@@ -45,15 +45,15 @@
     "@pocket-tools/eslint-config": "1.1.0",
     "@pocket-tools/tsconfig": "1.0.1",
     "@types/chai": "4.3.1",
-    "@types/jest": "27.4.1",
+    "@types/jest": "27.5.1",
     "@types/node": "16.11.35",
     "@types/uuid": "8.3.4",
     "chai": "4.3.6",
-    "jest": "27.5.1",
+    "jest": "28.1.0",
     "nock": "13.2.4",
     "nodemon": "2.0.16",
-    "sinon": "11.1.2",
-    "ts-jest": "27.1.5",
-    "ts-node": "10.7.0"
+    "sinon": "14.0.0",
+    "ts-jest": "28.0.3",
+    "ts-node": "10.8.0"
   }
 }
