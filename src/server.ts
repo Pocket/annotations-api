@@ -14,6 +14,7 @@ import { dynamoClient, readClient, writeClient } from './database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({
+    csrfPrevention: true,
     schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
     plugins: [
       sentryPlugin,
