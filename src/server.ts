@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import typeDefs from './typeDefs';
 import { resolvers } from './resolvers';
-import { buildSubgraphSchema } from '@apollo/federation';
+import { buildSubgraphSchema } from '@apollo/subgraph';
 import { sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
   ApolloServerPluginLandingPageGraphQLPlayground,
@@ -14,6 +14,7 @@ import { dynamoClient, readClient, writeClient } from './database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({
+    csrfPrevention: true,
     schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
     plugins: [
       sentryPlugin,
