@@ -1,9 +1,19 @@
 version: 2.1
 
+setup: true
+
+parameters:
+  build-on-change:
+    description: Check for file changes to lambdas before build/deploy. Setting this to false will force build.
+    type: boolean
+    default: true
+
 orbs:
-  aws-ecs: circleci/aws-ecs@2.2.1
   pocket: pocket/circleci-orbs@1.2.8
   aws-cli: circleci/aws-cli@1.2.1
+  backstage-entity-validator: roadiehq/backstage-entity-validator@0.4.2
+  path-filtering: circleci/path-filtering@0.1.3
+  continuation: circleci/continuation@0.3.0
 
 # Workflow shortcuts
 # You can remove unnecessary shortcuts as applicable
@@ -213,63 +223,26 @@ jobs:
       - run:
           name: run tests
           command: npm run test
-  lambda:
-    description: Builds and Optionaly deploys all the associated lambdas
-    parameters:
-      env_lower_name:
-        type: string
-        description: The lower case env name
-      env_capital_name:
-        default: Env Name
-        description: The env capital name
-        type: string
-      deploy:
-        type: boolean
-        default: true
-    docker:
-      - image: circleci/node:14@sha256:6f6b36595d00d61545f502d191c459a52e8f3d55a3607f4e2e2dd8f15a01c9ad
-        auth:
-          username: $DOCKERHUB_USERNAME
-          password: $DOCKERHUB_PASSWORD
-    steps:
-      - checkout
-      - run:
-          name: Package Lambda
-          command: |
-            cd lambda
-            npm ci --production
-            npm run build
-            cp -r package.json package-lock.json dist/
-            cp -r node_modules/ dist/node_modules/
-            cd dist
-            zip -r9 "/tmp/$CIRCLE_SHA1.zip" *
-            mkdir -p /tmp
-            cp "/tmp/$CIRCLE_SHA1.zip" /tmp/build.zip
-      - when:
-          condition: << parameters.deploy >>
-          steps:
-            - aws-cli/setup:
-                aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
-                aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
-                aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
-            - run:
-                name: Upload Package
-                command: aws s3 cp "/tmp/$CIRCLE_SHA1.zip" s3://pocket-annotationsapi-<< parameters.env_lower_name >>-sqs-event-consumer/
-            - pocket/deploy_lambda:
-                s3-bucket: pocket-annotationsapi-<< parameters.env_lower_name >>-sqs-event-consumer
-                aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
-                aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
-                aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
-                codedeploy-application-name: AnnotationsAPI-<< parameters.env_capital_name >>-Sqs-Event-Consumer-Lambda
-                codedeploy-deployment-group-name: AnnotationsAPI-<< parameters.env_capital_name >>-Sqs-Event-Consumer-Lambda
-                function-name: AnnotationsAPI-<< parameters.env_capital_name >>-Sqs-Event-Consumer-Function
-
-      - store_artifacts:
-          path: /tmp/build.zip
 
 workflows:
-  all:
+  api:
+    when:
+      not: << pipeline.parameters.build-on-change >>
     jobs:
+      - path-filtering/filter:
+          name: check-updated-files
+          # 3-column, whitespace-delimited mapping. One mapping per
+          # line:
+          # <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
+          # If build-on-change is false, the 'force-build' will trigger so the param is set to false to avoid double-build
+          mapping: |
+            lambda/.* run-build-lambda-job << pipeline.parameters.build-on-change >>
+          base-revision: main
+          # this is the path of the configuration we should trigger once
+          # path filtering and pipeline parameter value updates are
+          # complete.
+          config-path: .circleci/continue-config.yml
+
       - test_specs:
           <<: *not_main
           context: pocket
@@ -280,36 +253,123 @@ workflows:
           context: pocket
           name: test_integrations
 
-      # Try building the lambda on each branch
-      - lambda:
+      - apollo
+
+      - build:
+          context: pocket
+
+      # Try building the ECS docker image on each branch
+      - pocket/docker_build:
           <<: *not_dev_main
           context: pocket
-          name: build_lambda
-          env_lower_name: prod
-          env_capital_name: Prod
-          deploy: false
+          name: build_docker
+          aws-access-key-id: Dev_AWS_ACCESS_KEY
+          aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
+          aws-region: Dev_AWS_DEFAULT_REGION
+          repo-name: ${SERVICE_NAME_LOWER}-dev-app
+          ecr-url: ${ACCOUNT_ID_DEV}.dkr.ecr.us-east-1.amazonaws.com
+          push: false
+          requires:
+            - build
 
-      # Build & Deploy Development Lambdas
-      - lambda:
+      # Build & Deploy the Dev Docker Image
+      - pocket/docker_build:
           <<: *only_dev
           context: pocket
-          name: deploy_lambdas_dev
-          env_lower_name: dev
-          env_capital_name: Dev
-          deploy: true
+          name: build_docker_dev
+          aws-access-key-id: Dev_AWS_ACCESS_KEY
+          aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
+          aws-region: Dev_AWS_DEFAULT_REGION
+          codebuild-project-name: ${SERVICE_NAME}-Dev
+          codebuild-project-branch: dev
+          repo-name: ${SERVICE_NAME_LOWER}-dev-app
+          ecr-url: ${ACCOUNT_ID_DEV}.dkr.ecr.us-east-1.amazonaws.com
+          push: true
           requires:
-            - deploy_dev
+            - build
 
-      # Build & Deploy Production Lambdas
-      - lambda:
+      # Dev
+      - pocket/execute_codepipeline:
+          <<: *only_dev
+          context: pocket
+          name: deploy_dev
+          environment: Dev
+          aws-access-key-id: Dev_AWS_ACCESS_KEY
+          aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
+          aws-region: Dev_AWS_DEFAULT_REGION
+          codepipeline-name: ${SERVICE_NAME}-Dev-CodePipeline
+          codebuild-project-name: ${SERVICE_NAME}-Dev
+          codebuild-project-branch: dev
+          requires:
+            - build_docker_dev
+
+      # Build & Deploy the Prod Docker Image
+      - pocket/docker_build:
           <<: *only_main
           context: pocket
-          name: deploy_lambdas_prod
-          env_lower_name: prod
-          env_capital_name: Prod
-          deploy: true
+          name: build_docker_prod
+          aws-access-key-id: Prod_AWS_ACCESS_KEY
+          aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
+          aws-region: Prod_AWS_DEFAULT_REGION
+          codebuild-project-name: ${SERVICE_NAME}-Prod
+          codebuild-project-branch: main
+          repo-name: ${SERVICE_NAME_LOWER}-prod-app
+          ecr-url: ${ACCOUNT_ID_PROD}.dkr.ecr.us-east-1.amazonaws.com
+          push: true
           requires:
-            - deploy_prod
+            - build
+
+      # Prod
+      - pocket/execute_codepipeline:
+          <<: *only_main
+          context: pocket
+          name: deploy_prod
+          environment: Prod
+          aws-access-key-id: Prod_AWS_ACCESS_KEY
+          aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
+          aws-region: Prod_AWS_DEFAULT_REGION
+          codepipeline-name: ${SERVICE_NAME}-Prod-CodePipeline
+          codebuild-project-name: ${SERVICE_NAME}-Prod
+          codebuild-project-branch: main
+          requires:
+            - build_docker_prod
+
+      # Prod
+      - pocket/setup_deploy_params:
+          <<: *only_main
+          name: setup-deploy-params-prod
+          aws_access_key_id: Prod_AWS_ACCESS_KEY
+          aws_secret_access_key: Prod_AWS_SECRET_ACCESS_KEY
+          context: pocket
+          env: Prod
+          service_name: ${SERVICE_NAME}
+
+      # Dev
+      - pocket/setup_deploy_params:
+          <<: *only_dev
+          name: setup-deploy-params-dev
+          aws_access_key_id: Dev_AWS_ACCESS_KEY
+          aws_secret_access_key: Dev_AWS_SECRET_ACCESS_KEY
+          context: pocket
+          env: Dev
+          service_name: ${SERVICE_NAME}
+  force-build:
+    when:
+      not: << pipeline.parameters.build-on-change >>
+    jobs:
+      - continuation/continue:
+          configuration_path: .circleci/continue-config.yml
+          parameters: '{"run-build-deploy-lambda-job":true}'
+
+      - test_specs:
+          <<: *not_main
+          context: pocket
+          name: test_specs
+
+      - test_integrations:
+          <<: *not_main
+          context: pocket
+          name: test_integrations
 
       - apollo
 
