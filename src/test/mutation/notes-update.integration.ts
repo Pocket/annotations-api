@@ -78,9 +78,7 @@ describe('Notes update', () => {
         text: 'sweeter than a bucket full of strawberries',
       };
       expect(result).toEqual(expect.objectContaining(expectedHighlight));
-      const dbRecord = await new NotesDataService(dynamoClient(), {
-        isPremium: true,
-      } as IContext).get('1');
+      const dbRecord = await new NotesDataService(dynamoClient(), '1').get('1');
       expect(dbRecord?.text).toEqual(
         'sweeter than a bucket full of strawberries'
       );

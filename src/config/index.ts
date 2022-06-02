@@ -28,6 +28,7 @@ export default {
       note: process.env.HIGHLIGHT_NOTES_NOTE || 'note',
       _updatedAt: 'updatedAt',
       _createdAt: 'createdAt',
+      userId: 'userId',
     },
   },
   database: {

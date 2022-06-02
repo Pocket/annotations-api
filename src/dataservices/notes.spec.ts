@@ -7,9 +7,7 @@ import { IContext } from '../context';
 
 describe('Notes data service', () => {
   let dynamoSendStub: sinon.stub;
-  const service = new NotesDataService(dynamoClient(), {
-    isPremium: true,
-  } as IContext);
+  const service = new NotesDataService(dynamoClient(), '1');
 
   const dynamoFirstResult: BatchGetCommandOutput = {
     Responses: {

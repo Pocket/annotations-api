@@ -13,7 +13,7 @@ export class UsersMeta {
   private knex: Knex;
   private readonly userId: string;
 
-  constructor(context: IContext) {
+  constructor(context: Pick<IContext, 'userId' | 'db'>) {
     this.userId = context.userId;
     this.knex = context.db.writeClient;
     this.db = context.db.writeClient(UsersMeta.tableName);
