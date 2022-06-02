@@ -226,8 +226,7 @@ jobs:
 
 workflows:
   api:
-    when:
-      not: << pipeline.parameters.build-on-change >>
+    when: << pipeline.parameters.build-on-change >>
     jobs:
       - path-filtering/filter:
           name: check-updated-files
