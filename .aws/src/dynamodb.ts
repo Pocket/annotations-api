@@ -32,6 +32,22 @@ export class DynamoDB extends Resource {
             name: config.dynamodb.notesTable.key,
             type: 'S',
           },
+          {
+            name: config.dynamodb.notesTable.userId,
+            type: 'S',
+          },
+        ],
+        // Should index by userId so that we can purge user data when
+        // they delete their account (or potentially after some time since
+        // premium status lapsed)
+        globalSecondaryIndex: [
+          {
+            name: 'userId',
+            hashKey: 'userId',
+            projectionType: 'KEYS_ONLY',
+            readCapacity: 5,
+            writeCapacity: 5,
+          },
         ],
       },
     });
