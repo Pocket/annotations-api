@@ -37,8 +37,8 @@ export class SqsLambda extends Resource {
             config.environment === 'Prod' ? 'production' : 'development',
           ANNOTATIONS_API_URI:
             config.environment === 'Prod'
-              ? 'https://list-api.readitlater.com'
-              : 'https://list-api.getpocket.dev',
+              ? 'https://annotations-api.readitlater.com'
+              : 'https://annotations-api.getpocket.dev',
         },
         vpcConfig: {
           securityGroupIds: vpc.defaultSecurityGroups.ids,
