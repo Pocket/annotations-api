@@ -31,6 +31,7 @@ const server = getServer();
 
 const app = express();
 
+app.use(express.json());
 app.use('/batchDelete', batchDeleteRouter);
 
 //If there is no host header (really there always should be..) then use parser-wrapper as the name
