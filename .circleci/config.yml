@@ -265,8 +265,8 @@ workflows:
           aws-access-key-id: Dev_AWS_ACCESS_KEY
           aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
           aws-region: Dev_AWS_DEFAULT_REGION
-          repo-name: ${SERVICE_NAME_LOWER}-dev-app
-          ecr-url: ${ACCOUNT_ID_DEV}.dkr.ecr.us-east-1.amazonaws.com
+          repo-name: annotationsapi-dev-app
+          ecr-url: 410318598490.dkr.ecr.us-east-1.amazonaws.com
           push: false
           requires:
             - build
@@ -279,10 +279,10 @@ workflows:
           aws-access-key-id: Dev_AWS_ACCESS_KEY
           aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
           aws-region: Dev_AWS_DEFAULT_REGION
-          codebuild-project-name: ${SERVICE_NAME}-Dev
+          codebuild-project-name: AnnotationsAPI-Dev
           codebuild-project-branch: dev
-          repo-name: ${SERVICE_NAME_LOWER}-dev-app
-          ecr-url: ${ACCOUNT_ID_DEV}.dkr.ecr.us-east-1.amazonaws.com
+          repo-name: annotationsapi-dev-app
+          ecr-url: 410318598490.dkr.ecr.us-east-1.amazonaws.com
           push: true
           requires:
             - build
@@ -296,8 +296,8 @@ workflows:
           aws-access-key-id: Dev_AWS_ACCESS_KEY
           aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
           aws-region: Dev_AWS_DEFAULT_REGION
-          codepipeline-name: ${SERVICE_NAME}-Dev-CodePipeline
-          codebuild-project-name: ${SERVICE_NAME}-Dev
+          codepipeline-name: AnnotationsAPI-Dev-CodePipeline
+          codebuild-project-name: AnnotationsAPI-Dev
           codebuild-project-branch: dev
           requires:
             - build_docker_dev
@@ -310,10 +310,10 @@ workflows:
           aws-access-key-id: Prod_AWS_ACCESS_KEY
           aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
           aws-region: Prod_AWS_DEFAULT_REGION
-          codebuild-project-name: ${SERVICE_NAME}-Prod
+          codebuild-project-name: AnnotationsAPI-Prod
           codebuild-project-branch: main
-          repo-name: ${SERVICE_NAME_LOWER}-prod-app
-          ecr-url: ${ACCOUNT_ID_PROD}.dkr.ecr.us-east-1.amazonaws.com
+          repo-name: annotationsapi-prod-app
+          ecr-url: 996905175585.dkr.ecr.us-east-1.amazonaws.com
           push: true
           requires:
             - build
@@ -327,8 +327,8 @@ workflows:
           aws-access-key-id: Prod_AWS_ACCESS_KEY
           aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
           aws-region: Prod_AWS_DEFAULT_REGION
-          codepipeline-name: ${SERVICE_NAME}-Prod-CodePipeline
-          codebuild-project-name: ${SERVICE_NAME}-Prod
+          codepipeline-name: AnnotationsAPI-Prod-CodePipeline
+          codebuild-project-name: AnnotationsAPI-Prod
           codebuild-project-branch: main
           requires:
             - build_docker_prod
@@ -341,7 +341,7 @@ workflows:
           aws_secret_access_key: Prod_AWS_SECRET_ACCESS_KEY
           context: pocket
           env: Prod
-          service_name: ${SERVICE_NAME}
+          service_name: AnnotationsAPI
 
       # Dev
       - pocket/setup_deploy_params:
@@ -351,7 +351,7 @@ workflows:
           aws_secret_access_key: Dev_AWS_SECRET_ACCESS_KEY
           context: pocket
           env: Dev
-          service_name: ${SERVICE_NAME}
+          service_name: AnnotationsAPI
   force-build:
     when:
       not: << pipeline.parameters.build-on-change >>
@@ -383,8 +383,8 @@ workflows:
           aws-access-key-id: Dev_AWS_ACCESS_KEY
           aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
           aws-region: Dev_AWS_DEFAULT_REGION
-          repo-name: ${SERVICE_NAME_LOWER}-dev-app
-          ecr-url: ${ACCOUNT_ID_DEV}.dkr.ecr.us-east-1.amazonaws.com
+          repo-name: annotationsapi-dev-app
+          ecr-url: 410318598490.dkr.ecr.us-east-1.amazonaws.com
           push: false
           requires:
             - build
@@ -397,10 +397,10 @@ workflows:
           aws-access-key-id: Dev_AWS_ACCESS_KEY
           aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
           aws-region: Dev_AWS_DEFAULT_REGION
-          codebuild-project-name: ${SERVICE_NAME}-Dev
+          codebuild-project-name: AnnotationsAPI-Dev
           codebuild-project-branch: dev
-          repo-name: ${SERVICE_NAME_LOWER}-dev-app
-          ecr-url: ${ACCOUNT_ID_DEV}.dkr.ecr.us-east-1.amazonaws.com
+          repo-name: annotationsapi-dev-app
+          ecr-url: 410318598490.dkr.ecr.us-east-1.amazonaws.com
           push: true
           requires:
             - build
@@ -414,8 +414,8 @@ workflows:
           aws-access-key-id: Dev_AWS_ACCESS_KEY
           aws-secret-access-key: Dev_AWS_SECRET_ACCESS_KEY
           aws-region: Dev_AWS_DEFAULT_REGION
-          codepipeline-name: ${SERVICE_NAME}-Dev-CodePipeline
-          codebuild-project-name: ${SERVICE_NAME}-Dev
+          codepipeline-name: AnnotationsAPI-Dev-CodePipeline
+          codebuild-project-name: AnnotationsAPI-Dev
           codebuild-project-branch: dev
           requires:
             - build_docker_dev
@@ -428,10 +428,10 @@ workflows:
           aws-access-key-id: Prod_AWS_ACCESS_KEY
           aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
           aws-region: Prod_AWS_DEFAULT_REGION
-          codebuild-project-name: ${SERVICE_NAME}-Prod
+          codebuild-project-name: AnnotationsAPI-Prod
           codebuild-project-branch: main
-          repo-name: ${SERVICE_NAME_LOWER}-prod-app
-          ecr-url: ${ACCOUNT_ID_PROD}.dkr.ecr.us-east-1.amazonaws.com
+          repo-name: annotationsapi-prod-app
+          ecr-url: 996905175585.dkr.ecr.us-east-1.amazonaws.com
           push: true
           requires:
             - build
@@ -445,8 +445,8 @@ workflows:
           aws-access-key-id: Prod_AWS_ACCESS_KEY
           aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
           aws-region: Prod_AWS_DEFAULT_REGION
-          codepipeline-name: ${SERVICE_NAME}-Prod-CodePipeline
-          codebuild-project-name: ${SERVICE_NAME}-Prod
+          codepipeline-name: AnnotationsAPI-Prod-CodePipeline
+          codebuild-project-name: AnnotationsAPI-Prod
           codebuild-project-branch: main
           requires:
             - build_docker_prod
@@ -459,7 +459,7 @@ workflows:
           aws_secret_access_key: Prod_AWS_SECRET_ACCESS_KEY
           context: pocket
           env: Prod
-          service_name: ${SERVICE_NAME}
+          service_name: AnnotationsAPI
 
       # Dev
       - pocket/setup_deploy_params:
@@ -469,30 +469,30 @@ workflows:
           aws_secret_access_key: Dev_AWS_SECRET_ACCESS_KEY
           context: pocket
           env: Dev
-          service_name: ${SERVICE_NAME}
-      # TODO: Understand why these keep failing
-      # # Notify sentry of main deployment
-      # - pocket/sentry_release_notification:
-      #     <<: *only_main
-      #     name: sentry-release-notification-prod
-      #     context: pocket
-      #     repository_name: Pocket/${CONSTRUCT_NAME}
-      #     sentry_project_name: ${CONSTRUCT_NAME}
-      #     sentry_env: production
-      #     sentry_org: pocket
-      #     workspace-path: /tmp/workspace
-      #     requires:
-      #       - deploy_prod
+          service_name: AnnotationsAPI
+      TODO: Understand why these keep failing
+      # Notify sentry of main deployment
+      - pocket/sentry_release_notification:
+          <<: *only_main
+          name: sentry-release-notification-prod
+          context: pocket
+          repository_name: Pocket/annotations-api
+          sentry_project_name: annotations-api
+          sentry_env: production
+          sentry_org: pocket
+          workspace-path: /tmp/workspace
+          requires:
+            - deploy_prod
 
-      # # Notify sentry of dev deployment
-      # - pocket/sentry_release_notification:
-      #     <<: *only_dev
-      #     name: sentry-release-notification-dev
-      #     context: pocket
-      #     repository_name: Pocket/${CONSTRUCT_NAME}
-      #     sentry_project_name: ${CONSTRUCT_NAME}
-      #     sentry_env: development
-      #     sentry_org: pocket
-      #     workspace-path: /tmp/workspace
-      #     requires:
-      #       - deploy_dev
+      # Notify sentry of dev deployment
+      - pocket/sentry_release_notification:
+          <<: *only_dev
+          name: sentry-release-notification-dev
+          context: pocket
+          repository_name: Pocket/annotations-api
+          sentry_project_name: annotations-api
+          sentry_env: development
+          sentry_org: pocket
+          workspace-path: /tmp/workspace
+          requires:
+            - deploy_dev
