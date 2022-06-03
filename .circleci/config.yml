@@ -470,7 +470,6 @@ workflows:
           context: pocket
           env: Dev
           service_name: AnnotationsAPI
-      TODO: Understand why these keep failing
       # Notify sentry of main deployment
       - pocket/sentry_release_notification:
           <<: *only_main
