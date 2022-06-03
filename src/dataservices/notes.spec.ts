@@ -3,7 +3,6 @@ import { NotesDataService } from './notes';
 import { BatchGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
 import { dynamoClient } from '../database/client';
-import { IContext } from '../context';
 
 describe('Notes data service', () => {
   let dynamoSendStub: sinon.stub;

@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import { getServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager, IContext } from '../../context';
+import { ContextManager } from '../../context';
 import { dynamoClient, readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { UPDATE_NOTE } from './notes-mutations';

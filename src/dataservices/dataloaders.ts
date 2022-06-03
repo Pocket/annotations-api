@@ -1,6 +1,5 @@
 import DataLoader from 'dataloader';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { NotesDataService } from './notes';
 import { HighlightNote } from '../types';
 import { IContext } from '../context';
 

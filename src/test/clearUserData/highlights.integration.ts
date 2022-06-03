@@ -1,4 +1,3 @@
-import { dynamoClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { readClient } from '../../database/client';
 import { HighlightsDataService } from '../../dataservices/highlights';

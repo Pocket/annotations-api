@@ -7,7 +7,6 @@ import {
   HighlightNote,
 } from './types';
 import { HighlightsDataService } from './dataservices/highlights';
-import { NotesDataService } from './dataservices/notes';
 
 export const resolvers = {
   SavedItem: {

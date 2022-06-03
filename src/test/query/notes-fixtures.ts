@@ -1,9 +1,5 @@
 import { gql } from 'apollo-server-core';
-import {
-  BatchWriteCommand,
-  BatchWriteCommandInput,
-  PutCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { BatchWriteCommandInput, PutCommand } from '@aws-sdk/lib-dynamodb';
 import config from '../../config';
 import Chance from 'chance';
 

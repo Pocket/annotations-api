@@ -30,9 +30,7 @@ describe('clearUserData for Notes data', () => {
     const seeder = batchWriteMockNotes(count, userId);
     let batchCommand = seeder.next();
     while (!batchCommand.done) {
-      const res = await dynamodb.send(
-        new BatchWriteCommand(batchCommand.value)
-      );
+      await dynamodb.send(new BatchWriteCommand(batchCommand.value));
       batchCommand = seeder.next();
     }
   }

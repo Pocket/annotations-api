@@ -5,7 +5,6 @@ import sinon from 'sinon';
 import * as client from '../../database/client';
 import { NotesDataService } from '../../dataservices/notes';
 import { HighlightsDataService } from '../../dataservices/highlights';
-import { setTimeout } from 'timers/promises';
 import * as Sentry from '@sentry/node';
 
 describe('batchDelete Routes', () => {
@@ -20,8 +19,8 @@ describe('batchDelete Routes', () => {
 
   beforeAll(() => {
     // Stub out write client so that it doesn't need a db connection
-    sinon.stub(client, 'writeClient').returns(() => {});
-    sinon.stub(client, 'dynamoClient').returns(() => {});
+    sinon.stub(client, 'writeClient').returns(() => ({}));
+    sinon.stub(client, 'dynamoClient').returns(() => ({}));
     consoleSpy = sinon.spy(console, 'log');
     sentrySpy = sinon.spy(Sentry, 'captureException');
     breadcrumbSpy = sinon.spy(Sentry, 'addBreadcrumb');
