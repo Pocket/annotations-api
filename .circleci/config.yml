@@ -235,7 +235,7 @@ workflows:
           # <regex path-to-test> <parameter-to-set> <value-of-pipeline-parameter>
           # If build-on-change is false, the 'force-build' will trigger so the param is set to false to avoid double-build
           mapping: |
-            lambda/.* run-build-lambda-job << pipeline.parameters.build-on-change >>
+            lambda/.* run-build-deploy-events-lambda-job << pipeline.parameters.build-on-change >>
           base-revision: main
           # this is the path of the configuration we should trigger once
           # path filtering and pipeline parameter value updates are
@@ -358,7 +358,7 @@ workflows:
     jobs:
       - continuation/continue:
           configuration_path: .circleci/continue-config.yml
-          parameters: '{"run-build-deploy-lambda-job":true}'
+          parameters: '{"run-build-deploy-events-lambda-job":true}'
 
       - test_specs:
           <<: *not_main
