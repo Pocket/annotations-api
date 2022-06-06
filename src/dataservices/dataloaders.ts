@@ -1,6 +1,5 @@
 import DataLoader from 'dataloader';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { NotesDataService } from './notes';
 import { HighlightNote } from '../types';
 import { IContext } from '../context';
 
@@ -17,7 +16,7 @@ export function createNotesLoader(
 ): DataLoader<string, HighlightNote | undefined> {
   return new DataLoader<string, HighlightNote | undefined>(
     async (keys: string[]) => {
-      const notes = await new NotesDataService(client, context).getMany(keys);
+      const notes = await context.notesService.getMany(keys);
       // there might be missing/different ordered keys
       // we need these to be explicitly included, even if undefined,
       // so that the response has the same expected length and order

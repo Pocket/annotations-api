@@ -1,7 +1,7 @@
 import { ApolloServer } from 'apollo-server-express';
 import { getServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager, IContext } from '../../context';
+import { ContextManager } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { DELETE_NOTE } from './notes-mutations';
@@ -66,9 +66,7 @@ describe('Notes delete', () => {
       });
       const result = res.data?.deleteSavedItemHighlightNote;
       expect(result).toEqual('1');
-      const dbRecord = await new NotesDataService(client, {
-        isPremium: true,
-      } as IContext).get('1');
+      const dbRecord = await new NotesDataService(client, '1').get('1');
       expect(dbRecord).toBeNull();
     });
     it('returns NOT_FOUND if the highlight does not exist', async () => {

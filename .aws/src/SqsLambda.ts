@@ -35,6 +35,10 @@ export class SqsLambda extends Resource {
           GIT_SHA: gitSha,
           ENVIRONMENT:
             config.environment === 'Prod' ? 'production' : 'development',
+          ANNOTATIONS_API_URI:
+            config.environment === 'Prod'
+              ? 'https://annotations-api.readitlater.com'
+              : 'https://annotations-api.getpocket.dev',
         },
         vpcConfig: {
           securityGroupIds: vpc.defaultSecurityGroups.ids,

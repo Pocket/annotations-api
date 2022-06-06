@@ -7,7 +7,6 @@ import {
   HighlightNote,
 } from './types';
 import { HighlightsDataService } from './dataservices/highlights';
-import { NotesDataService } from './dataservices/notes';
 
 export const resolvers = {
   SavedItem: {
@@ -16,9 +15,9 @@ export const resolvers = {
       _,
       context: IContext
     ): Promise<SavedItemAnnotations> => {
-      const highlights = await new HighlightsDataService(
-        context
-      ).getHighlightsByItemId(parent.id);
+      const highlights = await new HighlightsDataService(context).getByItemId(
+        parent.id
+      );
       return { highlights };
     },
   },
@@ -37,9 +36,9 @@ export const resolvers = {
       args: { input: HighlightInput[] },
       context: IContext
     ): Promise<Highlight[]> => {
-      const highlights = await new HighlightsDataService(
-        context
-      ).createHighlight(args.input);
+      const highlights = await new HighlightsDataService(context).create(
+        args.input
+      );
       const noteData = args.input.reduce((result, highlightInput, index) => {
         if (highlightInput.note) {
           result.push({ id: highlights[index].id, text: highlightInput.note });
@@ -48,10 +47,7 @@ export const resolvers = {
       }, [] as { id: string; text: string }[]);
       let notes: HighlightNote[];
       if (noteData.length > 0) {
-        notes = await new NotesDataService(
-          context.dynamoClient,
-          context
-        ).batchCreate(noteData);
+        notes = await context.notesService.batchCreate(noteData);
       }
       const returnHighlights = highlights.map((item, index) => {
         const tmpReturn = { ...item };
@@ -66,17 +62,17 @@ export const resolvers = {
       context: IContext
     ): Promise<Highlight> => {
       const dataService = new HighlightsDataService(context);
-      await dataService.updateHighlightsById(params.id, params.input);
-      return await dataService.getHighlightById(params.id);
+      await dataService.update(params.id, params.input);
+      return await dataService.getById(params.id);
     },
     deleteSavedItemHighlight: async (
       _,
       args,
       context: IContext
     ): Promise<string> => {
-      const highlightId = await new HighlightsDataService(
-        context
-      ).deleteHighlightById(args.id);
+      const highlightId = await new HighlightsDataService(context).delete(
+        args.id
+      );
       return highlightId;
     },
     createSavedItemHighlightNote: async (
@@ -85,11 +81,8 @@ export const resolvers = {
       context: IContext
     ): Promise<HighlightNote> => {
       const dataService = new HighlightsDataService(context);
-      await dataService.getHighlightById(args.id);
-      return new NotesDataService(context.dynamoClient, context).create(
-        args.id,
-        args.input
-      );
+      await dataService.getById(args.id);
+      return context.notesService.create(args.id, args.input);
     },
     updateSavedItemHighlightNote: async (
       _,
@@ -97,11 +90,8 @@ export const resolvers = {
       context: IContext
     ): Promise<HighlightNote> => {
       const dataService = new HighlightsDataService(context);
-      await dataService.getHighlightById(args.id);
-      return new NotesDataService(context.dynamoClient, context).upsert(
-        args.id,
-        args.input
-      );
+      await dataService.getById(args.id);
+      return context.notesService.upsert(args.id, args.input);
     },
     deleteSavedItemHighlightNote: async (
       _,
@@ -109,10 +99,8 @@ export const resolvers = {
       context: IContext
     ): Promise<string> => {
       const dataService = await new HighlightsDataService(context);
-      await dataService.deleteHighlightById(args.id);
-      return new NotesDataService(context.dynamoClient, context).delete(
-        args.id
-      );
+      await dataService.delete(args.id);
+      return context.notesService.delete(args.id);
     },
   },
 };

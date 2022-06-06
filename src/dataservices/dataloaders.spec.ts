@@ -41,10 +41,14 @@ describe('dataloaders', () => {
     // but fetch is never invoked because we mock the data retrieval function
     const dynamo = dynamoClient();
     beforeEach(() => {
+      const notesService = new NotesDataService(dynamo, '1');
       notesStub = sinon
         .stub(NotesDataService.prototype, 'getMany')
         .resolves(mockNotesResponse);
-      notesLoader = createNotesLoader(dynamo, { isPremium: true } as IContext);
+      notesLoader = createNotesLoader(dynamo, {
+        isPremium: true,
+        notesService,
+      } as IContext);
     });
     afterEach(() => {
       notesStub.restore();

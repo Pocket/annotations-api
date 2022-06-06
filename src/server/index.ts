@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server-express';
-import typeDefs from './typeDefs';
-import { resolvers } from './resolvers';
+import typeDefs from '../typeDefs';
+import { resolvers } from '../resolvers';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
@@ -9,8 +9,8 @@ import {
   ApolloServerPluginInlineTraceDisabled,
   ApolloServerPluginInlineTrace,
 } from 'apollo-server-core';
-import { ContextManager } from './context';
-import { dynamoClient, readClient, writeClient } from './database/client';
+import { ContextManager } from '../context';
+import { dynamoClient, readClient, writeClient } from '../database/client';
 
 export function getServer(): ApolloServer {
   return new ApolloServer({

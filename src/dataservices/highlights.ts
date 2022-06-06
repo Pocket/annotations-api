@@ -16,7 +16,9 @@ export class HighlightsDataService {
   private readonly usersMetaService: UsersMeta;
   private readonly savedItemService: SavedItem;
 
-  constructor(private context: IContext) {
+  constructor(
+    private context: Pick<IContext, 'db' | 'userId' | 'isPremium' | 'apiId'>
+  ) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
     this.writeDb = context.db.writeClient;
@@ -24,7 +26,7 @@ export class HighlightsDataService {
     this.savedItemService = new SavedItem(context);
   }
 
-  async highlightsCountByItemIds(
+  private async highlightsCountByItemIds(
     itemIds: number[]
   ): Promise<{ [itemId: string]: number }> {
     const result = await this.readDb<HighlightEntity>('user_annotations')
@@ -46,7 +48,7 @@ export class HighlightsDataService {
    * @param itemId the itemId in the user's list
    * @throws NotFoundError if the itemId doesn't exist in the user's list
    */
-  async getHighlightsByItemId(itemId: string): Promise<Highlight[]> {
+  public async getByItemId(itemId: string): Promise<Highlight[]> {
     const rows = await this.readDb<HighlightEntity>('user_annotations')
       .select()
       .where('item_id', itemId)
@@ -69,7 +71,7 @@ export class HighlightsDataService {
    * the limit for any item
    * @returns void if validation passes
    */
-  async checkHighlightLimit(highlightInput: HighlightInput[]) {
+  private async checkHighlightLimit(highlightInput: HighlightInput[]) {
     // Compute the total requested highlights by itemId
     const additionalCounts = groupByCount(highlightInput, 'itemId');
     const uniqueItemIds = Object.keys(additionalCounts).map(parseInt);
@@ -100,9 +102,7 @@ export class HighlightsDataService {
    * @param highlightInput
    * @returns The Highlights created
    */
-  async createHighlight(
-    highlightInput: HighlightInput[]
-  ): Promise<Highlight[]> {
+  public async create(highlightInput: HighlightInput[]): Promise<Highlight[]> {
     // Ensure non-premium users don't exceed highlight limits
     // Will throw error here if validation fails
     if (!this.context.isPremium) {
@@ -153,8 +153,8 @@ export class HighlightsDataService {
    * @param id
    * @param input
    */
-  async updateHighlightsById(id: string, input: HighlightInput): Promise<void> {
-    const annotation = await this.getHighlightById(id);
+  public async update(id: string, input: HighlightInput): Promise<void> {
+    const annotation = await this.getById(id);
 
     await this.writeDb.transaction(async (trx: Knex.Transaction) => {
       await trx('user_annotations')
@@ -180,7 +180,7 @@ export class HighlightsDataService {
    * Get highlight for a given ID and format returned data to match GraphQL spec
    * @param id
    */
-  async getHighlightById(id: string): Promise<Highlight> {
+  public async getById(id: string): Promise<Highlight> {
     const row = await this.getHighlightByIdQuery(id);
 
     return this.toGraphql(row);
@@ -209,7 +209,7 @@ export class HighlightsDataService {
    * Delete highlight for a given ID
    * @param highlightId
    */
-  async deleteHighlightById(highlightId: string): Promise<string> {
+  public async delete(highlightId: string): Promise<string> {
     const annotation = await this.getHighlightByIdQuery(highlightId);
 
     return await this.writeDb.transaction(async (trx: Knex.Transaction) => {
@@ -231,6 +231,20 @@ export class HighlightsDataService {
 
       return highlightId;
     });
+  }
+
+  /**
+   * Delete all data associated with a given user ID from the database.
+   * Typically used when a Pocket User deletes their account.
+   * Depending on a user's behavior, this could be a lot of data to clear;
+   * you should not keep the connection to the api client open while this
+   * operation is completing, and instead use this as a background process.
+   * The calling function should handle any errors thrown by this method.
+   */
+  public async clearUserData() {
+    await this.writeDb('user_annotations')
+      .where('user_id', this.userId)
+      .delete();
   }
 
   /**

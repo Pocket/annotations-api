@@ -14,12 +14,13 @@ import {
   PutCommandOutput,
   DeleteCommand,
   DeleteCommandOutput,
+  QueryCommand,
+  QueryCommandInput,
+  QueryCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import config from '../config';
 import { HighlightNote, HighlightNoteEntity } from '../types';
 import { backoff } from './utils';
-import { IContext } from '../context';
-import { ForbiddenError } from 'apollo-server-errors';
 import { NotFoundError } from '@pocket-tools/apollo-utils';
 
 export class NotesDataService {
@@ -27,13 +28,7 @@ export class NotesDataService {
   public dynamo: DynamoDBDocumentClient;
   private table = config.dynamoDb.notesTable;
 
-  constructor(private client: DynamoDBClient, private context: IContext) {
-    if (!this.context.isPremium) {
-      throw new ForbiddenError(
-        'Premium account required to access this feature'
-      );
-    }
-
+  constructor(private client: DynamoDBClient, private userId: string) {
     const dynamoClientConfig: DynamoDBClientConfig = {
       region: config.aws.region,
     };
@@ -64,6 +59,7 @@ export class NotesDataService {
     const noteEntity = {
       [this.table.key]: id,
       [this.table.note]: text,
+      [this.table.userId]: this.userId.toString(),
       [this.table._createdAt]: timeStamp,
       [this.table._updatedAt]: timeStamp,
     } as HighlightNoteEntity;
@@ -178,19 +174,16 @@ export class NotesDataService {
     return this.toGraphQl({ highlightId: id, ...updatedEntity });
   }
 
-  public async batchCreate(
-    notes: { id: string; text: string }[]
-  ): Promise<HighlightNote[]> {
-    const noteEntities = notes.map((note) => this.toEntity(note.id, note.text));
-    const notePutRequests = noteEntities.map((note) => {
-      return {
-        PutRequest: {
-          Item: note,
-        },
-      };
-    });
+  /**
+   * Retry logic for batch write operations
+   * The sdk input is not typed well (so defaulting to any here for ease),
+   * but needs to be a valid array of WriteRequest that can be put into
+   * BatchWriteCommandInput
+   * @param requests
+   */
+  private async batchWrite(requests) {
     let unprocessedItems: BatchWriteCommandInput['RequestItems'] = {
-      [this.table.name]: notePutRequests,
+      [this.table.name]: requests,
     };
     let tries = 0;
     // Make requests until entire batch is completed, since size limits
@@ -218,6 +211,25 @@ export class NotesDataService {
         unprocessedItems = undefined;
       }
     }
+  }
+
+  /**
+   * Create a batch of notes attached to highlights
+   * @param notes notes data to insert into db
+   * @returns Array of notes corresponding to GraphQL object
+   */
+  public async batchCreate(
+    notes: { id: string; text: string }[]
+  ): Promise<HighlightNote[]> {
+    const noteEntities = notes.map((note) => this.toEntity(note.id, note.text));
+    const notePutRequests = noteEntities.map((note) => {
+      return {
+        PutRequest: {
+          Item: note,
+        },
+      };
+    });
+    await this.batchWrite(notePutRequests);
     return noteEntities.map((entity) => this.toGraphQl(entity));
   }
 
@@ -237,5 +249,50 @@ export class NotesDataService {
       throw new NotFoundError('Note does not exist on highlight');
     }
     return id;
+  }
+
+  /**
+   * Delete all data for a particular user. Used when they delete
+   * their account (or perhaps after a certain amount of time after
+   * premium cancellation).
+   * Depending on a user's behavior, this could be a lot of data to clear;
+   * you should not keep the connection to the api client open while this
+   * operation is completing, and instead use this as a background process.
+   * The calling function should handle any errors thrown by this method.
+   */
+  public async clearUserData(): Promise<void> {
+    // Set this to true to get through one iteration of the while loop
+    let lastEvaluatedKey: any = true;
+    const queryCommandInput: QueryCommandInput = {
+      TableName: this.table.name,
+      IndexName: 'userId',
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: {
+        ':uid': this.userId,
+      },
+      Limit: 25, // Max value for batch write; non-expandable dynamodb limit
+      ProjectionExpression: this.table.key,
+    };
+    // If LastEvaluatedKey is present in the result set, there are
+    // more values to query for
+    while (lastEvaluatedKey != null) {
+      const highlightResult: QueryCommandOutput = await this.client.send(
+        new QueryCommand(queryCommandInput)
+      );
+      if (highlightResult.Items?.length > 0) {
+        const deleteRequests = highlightResult.Items.map((res) => ({
+          DeleteRequest: {
+            Key: {
+              [this.table.key]: res[this.table.key],
+            },
+          },
+        }));
+        await this.batchWrite(deleteRequests);
+      }
+      // Add the start key to the query command in case there are more
+      // results to fetch; if null, loop will exit
+      lastEvaluatedKey = highlightResult.LastEvaluatedKey;
+      queryCommandInput['ExclusiveStartKey'] = lastEvaluatedKey;
+    }
   }
 }

@@ -7,7 +7,7 @@ export class SavedItem {
   private readonly userId: string;
   private readonly apiId: string;
 
-  constructor(context: IContext) {
+  constructor(context: Pick<IContext, 'userId' | 'apiId'>) {
     this.userId = context.userId;
     this.apiId = context.apiId;
   }

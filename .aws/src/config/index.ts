@@ -57,6 +57,7 @@ export const config = {
       // DynamoDB doesn't require a schema, but we want to create an
       // environment variable so we are not working with string field names
       note: 'note',
+      userId: 'userId',
     },
   },
 };
