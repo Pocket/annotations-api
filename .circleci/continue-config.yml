@@ -95,7 +95,7 @@ jobs:
                 aws-access-key-id: << parameters.env_capital_name >>_AWS_ACCESS_KEY
                 aws-secret-access-key: << parameters.env_capital_name >>_AWS_SECRET_ACCESS_KEY
                 aws-region: << parameters.env_capital_name >>_AWS_DEFAULT_REGION
-                codedeploy-application-name: -<< parameters.env_capital_name >>-<< parameters.resource_name >>-Lambda
+                codedeploy-application-name: AnnotationsAPI-<< parameters.env_capital_name >>-<< parameters.resource_name >>-Lambda
                 codedeploy-deployment-group-name: AnnotationsAPI-<< parameters.env_capital_name >>-<< parameters.resource_name >>-Lambda
                 function-name: AnnotationsAPI-<< parameters.env_capital_name >>-<< parameters.resource_name >>-Function
 
