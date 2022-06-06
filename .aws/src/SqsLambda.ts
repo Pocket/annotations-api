@@ -19,7 +19,7 @@ export class SqsLambda extends Resource {
     const { sentryDsn, gitSha } = this.getEnvVariableValues();
 
     new PocketSQSWithLambdaTarget(this, 'sqs-event-consumer', {
-      name: `${config.prefix}-sqs-event-consumer`,
+      name: `${config.prefix}-Sqs-Event-Consumer`,
       batchSize: 10,
       batchWindow: 60,
       sqsQueue: {
