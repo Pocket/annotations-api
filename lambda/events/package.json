@@ -18,7 +18,7 @@
     "@types/node": "14.18.21"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.98",
+    "@types/aws-lambda": "8.10.100",
     "@types/jest": "27.4.1",
     "jest": "27.5.1",
     "ts-jest": "27.1.5"
