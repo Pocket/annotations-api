@@ -5,7 +5,7 @@ import {
   RemoteBackend,
   TerraformStack,
 } from 'cdktf';
-import { AwsProvider } from '@cdktf/provider-aws';
+import { AwsProvider, sqs } from '@cdktf/provider-aws';
 import {
   DataAwsCallerIdentity,
   DataAwsRegion,
@@ -19,6 +19,7 @@ import {
   PocketECSCodePipeline,
   PocketPagerDuty,
   PocketVPC,
+  ApplicationSqsSnsTopicSubscription,
 } from '@pocket-tools/terraform-modules';
 import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
 import { LocalProvider } from '@cdktf/provider-local';
@@ -49,7 +50,21 @@ class AnnotationsAPI extends TerraformStack {
     const cache = AnnotationsAPI.createElasticache(this, pocketVPC);
     const dynamodb = new DynamoDB(this, 'dynamodb');
 
-    new SqsLambda(this, 'sqs-event-consumer', pocketVPC);
+    const sqsLambda = new SqsLambda(this, 'sqs-event-consumer', pocketVPC);
+
+    const lambda = sqsLambda.lambda;
+
+    new ApplicationSqsSnsTopicSubscription(
+      this,
+      'user-events-sns-subscription',
+      {
+        name: config.prefix,
+        snsTopicArn: `arn:aws:sns:${pocketVPC.region}:${pocketVPC.accountId}:${config.lambda.snsTopicName.userEvents}`,
+        sqsQueue: lambda.sqsQueueResource,
+        tags: config.tags,
+        dependsOn: [lambda.sqsQueueResource as sqs.SqsQueue],
+      }
+    );
 
     const pocketApp = this.createPocketAlbApplication({
       pagerDuty: this.createPagerDuty(),
