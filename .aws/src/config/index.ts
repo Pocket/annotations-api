@@ -60,4 +60,9 @@ export const config = {
       userId: 'userId',
     },
   },
+  lambda: {
+    snsTopicName: {
+      userEvents: `PocketEventBridge-${environment}-UserEventTopic`,
+    },
+  },
 };

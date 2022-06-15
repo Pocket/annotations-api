@@ -8,6 +8,8 @@ import { ssm } from '@cdktf/provider-aws';
 import { PocketPagerDuty } from '@pocket-tools/terraform-modules';
 
 export class SqsLambda extends Resource {
+  public readonly lambda: PocketSQSWithLambdaTarget;
+
   constructor(
     scope: Construct,
     private name: string,
@@ -18,7 +20,7 @@ export class SqsLambda extends Resource {
 
     const { sentryDsn, gitSha } = this.getEnvVariableValues();
 
-    new PocketSQSWithLambdaTarget(this, 'sqs-event-consumer', {
+    this.lambda = new PocketSQSWithLambdaTarget(this, 'sqs-event-consumer', {
       name: `${config.prefix}-Sqs-Event-Consumer`,
       batchSize: 10,
       batchWindow: 60,
