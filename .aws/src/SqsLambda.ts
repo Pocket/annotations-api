@@ -24,6 +24,7 @@ export class SqsLambda extends Resource {
       name: `${config.prefix}-Sqs-Event-Consumer`,
       batchSize: 10,
       batchWindow: 60,
+      functionResponseTypes: ['ReportBatchItemFailures'],
       sqsQueue: {
         maxReceiveCount: 3,
         visibilityTimeoutSeconds: 300,
