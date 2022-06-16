@@ -14,7 +14,8 @@ export default {
   aws: {
     region: process.env.AWS_REGION || 'us-east-1',
     endpoint:
-      (process.env.NODE_ENV != 'production' && process.env.NODE_ENV != 'development')
+      process.env.NODE_ENV != 'production' &&
+      process.env.NODE_ENV != 'development'
         ? process.env.AWS_ENDPOINT || 'http://localstack:4566'
         : undefined,
     maxBackoff: 3000, // in ms, max amount of backoff time allowed for multiple requests
