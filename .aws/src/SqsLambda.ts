@@ -33,6 +33,7 @@ export class SqsLambda extends Resource {
         runtime: LAMBDA_RUNTIMES.NODEJS14,
         handler: 'index.handler',
         timeout: 120,
+        reservedConcurrencyLimit: config.reservedConcurrencyLimit,
         environment: {
           SENTRY_DSN: sentryDsn,
           GIT_SHA: gitSha,

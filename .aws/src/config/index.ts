@@ -32,6 +32,7 @@ export const config = {
   },
   graphqlVariant,
   cacheNodes,
+  reservedConcurrencyLimit: 1,
   cacheSize,
   healthCheck: {
     command: [
