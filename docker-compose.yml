@@ -1,7 +1,7 @@
 version: '3.1'
 services:
   localstack:
-    image: localstack/localstack@sha256:3d462457a7e069541eeff15e6714bfe14861997d52ab6025ee13b1bf9f1a8f82
+    image: localstack/localstack@sha256:3c15d4753eea88888cf830079d1e792f753dd10f4a69bda1e7ea293e511f0a3a
     env_file:
       - .docker/local.env
     ports:
@@ -36,7 +36,7 @@ services:
       - '6379:6379'
 
   app:
-    image: node:16@sha256:a13d2d2aec7f0dae18a52ca4d38b592e45a45cc4456ffab82e5ff10d8a53d042
+    image: node:16@sha256:8951351b7c6a2f8ff9ec25eccc087d37a8aeccf9bf911888ff13c76223467466
     working_dir: /app
     ports:
       - '4008:4008'
