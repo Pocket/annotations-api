@@ -6,6 +6,8 @@ import xrayExpress from 'aws-xray-sdk-express';
 import express from 'express';
 import https from 'https';
 import batchDeleteRouter from './server/routes/batchDelete';
+import { EventEmitter } from 'events';
+import { BatchDeleteHandler } from './server/aws/batchDeleteHandler';
 
 const serviceName = 'annotations-api';
 
@@ -26,6 +28,9 @@ Sentry.init({
   ...config.sentry,
   debug: config.sentry.environment == 'development',
 });
+
+// Start BatchDelete queue polling
+new BatchDeleteHandler(new EventEmitter());
 
 const server = getServer();
 

@@ -10,14 +10,23 @@ export const successCallback = (
 };
 
 export const failCallback = (
+  module: string,
   error: Error,
   dataType: string,
   userId: string,
-  traceId: string
+  traceId: string,
+  annotationIds?: number[]
 ) => {
-  const failMessage = `BatchDelete: Error = Failed to delete ${dataType} for userId=${userId}, traceId=${traceId}`;
+  const failMessage = `${module}: Error = Failed to delete ${dataType} for userId=${userId}, traceId=${traceId}`;
   Sentry.addBreadcrumb({ message: failMessage });
+  if (annotationIds) {
+    Sentry.addBreadcrumb({
+      message: `failed to delete annotationIds: ${JSON.stringify(
+        annotationIds
+      )}`,
+    });
+  }
   Sentry.captureException(error);
-  console.log(failMessage);
-  console.log(error);
+  console.error(failMessage);
+  console.error(error);
 };

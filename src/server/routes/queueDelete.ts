@@ -56,7 +56,9 @@ router.post(
     new NotesDataService(dynamoClient(), userId)
       .clearUserData()
       .then(() => successCallback('Notes', userId, requestId))
-      .catch((error) => failCallback(error, 'Notes', userId, requestId));
+      .catch((error) =>
+        failCallback('queueDelete', error, 'Notes', userId, requestId)
+      );
 
     const highlightDataService = new HighlightsDataService({
       userId,

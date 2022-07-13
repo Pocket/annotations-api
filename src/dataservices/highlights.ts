@@ -255,10 +255,11 @@ export class HighlightsDataService {
    * operation is completing, and instead use this as a background process.
    * The calling function should handle any errors thrown by this method.
    */
-  public async clearUserData() {
+  public async clearUserData(annotationIds: number[]) {
     await this.writeDb('user_annotations')
-      .where('user_id', this.userId)
-      .delete();
+      .delete()
+      .whereIn('annotation_id', annotationIds)
+      .andWhere({ user_id: this.userId });
   }
 
   /**
