@@ -4,10 +4,7 @@ import deepEqualInAnyOrder from 'deep-equal-in-any-order';
 import shallowDeepEqual from 'chai-shallow-deep-equal';
 import sinon from 'sinon';
 import { SQS } from '@aws-sdk/client-sqs';
-import {
-  enqueueHighlightIds,
-  SqsMessage,
-} from './queueDelete';
+import { enqueueAnnotationIds, SqsMessage } from './queueDelete';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import config from '../../config';
 import * as Sentry from '@sentry/node';
@@ -73,12 +70,12 @@ describe('/queueDelete', () => {
       const highlightsDataService = new HighlightsDataService({
         userId: '1',
         db: {
-        writeClient: writeClient(),
+          writeClient: writeClient(),
           readClient: readClient(),
-      },
-      apiId: 'service', // unused but required for inheritance
-        isPremium: false
-    });
+        },
+        apiId: 'service', // unused but required for inheritance
+        isPremium: false,
+      });
 
       const data = {
         userId,
@@ -86,7 +83,11 @@ describe('/queueDelete', () => {
         isPremium: false,
       };
 
-      await enqueueHighlightIds(data as SqsMessage, highlightsDataService, '123');
+      await enqueueAnnotationIds(
+        data as SqsMessage,
+        highlightsDataService,
+        '123'
+      );
 
       expect(sqsSendMock.callCount).to.equal(2);
       // No exceptions
@@ -97,13 +98,69 @@ describe('/queueDelete', () => {
       const secondMessage = JSON.parse(
         sqsSendMock.getCall(1).args[0].input.Entries[0].MessageBody
       );
-      expect(firstMessage).to.shallowDeepEqual({ ...data, annotationIds: [1, 2, 3] });
+      expect(firstMessage).to.shallowDeepEqual({
+        ...data,
+        annotationIds: [1, 2, 3],
+      });
       expect(firstMessage.traceId).to.not.be.empty;
       expect(secondMessage).to.shallowDeepEqual({
         ...data,
         annotationIds: [4, 5, 6],
       });
       expect(secondMessage.traceId).to.not.be.empty;
+    });
+  });
+
+  describe('enqueueAnnotationIds failure', () => {
+    beforeAll(() => {
+      sqsSendMock?.restore();
+    });
+    beforeEach(() => {
+      sqsSendMock = sinon
+        .stub(SQS.prototype, 'send')
+        .onFirstCall()
+        .rejects(new Error('no queue for you'))
+        .onSecondCall()
+        .resolves();
+    });
+    afterEach(() => sqsSendMock.restore());
+
+    it('reports errors to Sentry when a batch fails, even if some succeed', async () => {
+      config.queueDelete.queryLimit = 3;
+      config.queueDelete.itemIdChunkSize = 3;
+      config.aws.sqs.batchSize = 1;
+      const userId = 1;
+      const highlightsDataService = new HighlightsDataService({
+        userId: '1',
+        db: {
+          writeClient: writeClient(),
+          readClient: readClient(),
+        },
+        apiId: 'service', // unused but required for inheritance
+        isPremium: false,
+      });
+
+      const data = {
+        userId,
+        email: 'test@yolo.com',
+        isPremium: false,
+      };
+
+      await enqueueAnnotationIds(
+        data as SqsMessage,
+        highlightsDataService,
+        '123'
+      );
+
+      // Two calls made
+      expect(sqsSendMock.callCount).to.equal(2);
+      // Only one fails
+      expect(sentrySpy.callCount).to.equal(1);
+      expect(sentrySpy.firstCall.args[0].message).to.equal('no queue for you');
+      expect(breadSpy.callCount).to.equal(1);
+      expect(breadSpy.firstCall.args[0].message)
+        .to.contain('QueueDelete: Error')
+        .and.to.contain('annotationIds');
     });
   });
 });

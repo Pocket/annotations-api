@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Router } from 'express';
-import { body, checkSchema, Schema } from 'express-validator';
+import { checkSchema, Schema } from 'express-validator';
 import { dynamoClient, readClient, writeClient } from '../../database/client';
 import config from '../../config';
 import { sqs } from '../aws/sqs';
@@ -50,7 +50,6 @@ router.post(
   checkSchema(queueDeleteSchema),
   validate,
   (req: Request, res: Response) => {
-
     const requestId = req.body.traceId ?? nanoid();
     const userId = req.body.userId;
     const isPremium = req.body.isPremium;
@@ -69,7 +68,7 @@ router.post(
       isPremium,
     });
 
-    enqueueHighlightIds(req.body, highlightDataService, requestId);
+    enqueueAnnotationIds(req.body, highlightDataService, requestId);
 
     return res.send({
       status: 'OK',
@@ -79,7 +78,7 @@ router.post(
 );
 
 /**
- * Enqueue highlight IDs for deletions in batches. This is used to purge
+ * Enqueue annotation Ids for deletions in batches. This is used to purge
  * user_annotations. Since
  * the data to clear could be large, we don't want to keep the api
  * connection open while it's happening. Instead these processes
@@ -88,7 +87,7 @@ router.post(
  * @param highlightDataService
  * @param requestId
  */
-export async function enqueueHighlightIds(
+export async function enqueueAnnotationIds(
   data: Omit<SqsMessage, 'annotationIds'>,
   highlightDataService: HighlightsDataService,
   requestId: string
@@ -138,7 +137,7 @@ export async function enqueueHighlightIds(
     sqsCommands.map((command) => {
       // Handle logging individual errors as the promises are resolved
       return sqs.send(command).catch((err) => {
-        const message = `QueueDelete: Error - Failed to enqueue annotations for userId: ${userId} (command=\n${JSON.stringify(
+        const message = `QueueDelete: Error - Failed to enqueue annotationIds for userId: ${userId} (command=\n${JSON.stringify(
           command
         )})`;
         Sentry.addBreadcrumb({ message });

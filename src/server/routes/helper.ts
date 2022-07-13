@@ -1,6 +1,10 @@
 import * as Sentry from '@sentry/node';
 
-export const successCallback = (dataType: string, userId: string, traceId: string) => {
+export const successCallback = (
+  dataType: string,
+  userId: string,
+  traceId: string
+) => {
   const successMessage = `BatchDelete: ${dataType} deletion completed for userId=${userId}, traceId=${traceId}`;
   console.log(successMessage);
 };
