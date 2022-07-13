@@ -65,6 +65,6 @@ export default {
   },
   queueDelete: {
     queryLimit: 500,
-    itemIdChunkSize: 100,
+    itemIdChunkSize: 20,
   },
 };
