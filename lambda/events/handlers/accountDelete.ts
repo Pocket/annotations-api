@@ -3,8 +3,9 @@ import { config } from '../config';
 import fetch from 'node-fetch';
 
 /**
- * Given an account delete event, queue SQS messages to delete user
- * data in the Annotations subgraph.
+ * Given an account delete event, queue SQS messages to delete chunks of the
+ * user's list and tags from the database. Since we don't want to overload the database,
+ * don't do this in a single operation but in chunks.
  * @param record SQSRecord containing forwarded event from eventbridge
  * @throws Error if response is not ok
  */

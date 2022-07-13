@@ -12,6 +12,20 @@ export default {
     environment: process.env.NODE_ENV || 'development',
   },
   aws: {
+    sqs: {
+      waitTimeSeconds: 20,
+      batchSize: 10,
+      annotationsDeleteQueue: {
+        url:
+          process.env.SQS_BATCH_DELETE_QUEUE_URL ||
+          'http://localhost:4566/queue/pocket-annotations-delete-queue',
+        visibilityTimeout: 300,
+        maxMessages: 1,
+        waitTimeSeconds: 0,
+        defaultPollIntervalSeconds: 300,
+        afterMessagePollIntervalSeconds: 60,
+      },
+    },
     region: process.env.AWS_REGION || 'us-east-1',
     endpoint:
       process.env.NODE_ENV != 'production' &&
@@ -48,5 +62,9 @@ export default {
     },
     dbName: process.env.DATABASE || 'readitla_ril-tmp',
     tz: process.env.DATABASE_TZ || 'US/Central',
+  },
+  queueDelete: {
+    queryLimit: 500,
+    itemIdChunkSize: 100,
   },
 };

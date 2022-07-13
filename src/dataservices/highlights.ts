@@ -26,6 +26,20 @@ export class HighlightsDataService {
     this.savedItemService = new SavedItem(context);
   }
 
+  /**
+   * Get saved item IDs for a given user.
+   * @param offset
+   * @param limit
+   */
+  public getAnnotationIds(offset: number, limit: number) {
+    return this.writeDb('user_annotations')
+      .where('user_id', this.userId)
+      .orderBy('created_at', 'ASC')
+      .limit(limit)
+      .offset(offset)
+      .pluck('annotation_id');
+  }
+
   private async highlightsCountByItemIds(
     itemIds: number[]
   ): Promise<{ [itemId: string]: number }> {

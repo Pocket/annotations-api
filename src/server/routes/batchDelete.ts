@@ -2,10 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { Router } from 'express';
 import { checkSchema, Schema, validationResult } from 'express-validator';
 import { nanoid } from 'nanoid';
-import * as Sentry from '@sentry/node';
 import { dynamoClient, readClient, writeClient } from '../../database/client';
 import { NotesDataService } from '../../dataservices/notes';
 import { HighlightsDataService } from '../../dataservices/highlights';
+import { failCallback, successCallback } from './helper';
 
 const router = Router();
 
@@ -45,24 +45,6 @@ export function validate(
   next();
 }
 
-const successCallback = (dataType: string, userId: string, traceId: string) => {
-  const successMessage = `BatchDelete: ${dataType} deletion completed for userId=${userId}, traceId=${traceId}`;
-  console.log(successMessage);
-};
-
-const failCallback = (
-  error: Error,
-  dataType: string,
-  userId: string,
-  traceId: string
-) => {
-  const failMessage = `BatchDelete: Error = Failed to delete ${dataType} for userId=${userId}, traceId=${traceId}`;
-  Sentry.addBreadcrumb({ message: failMessage });
-  Sentry.captureException(error);
-  console.log(failMessage);
-  console.log(error);
-};
-
 /**
  * Delete a user's annotation data.
  * @param userId
@@ -77,6 +59,7 @@ export function deleteUserData(
     .clearUserData()
     .then(() => successCallback('Notes', userId, traceId))
     .catch((error) => failCallback(error, 'Notes', userId, traceId));
+
   new HighlightsDataService({
     userId,
     db: {

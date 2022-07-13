@@ -276,6 +276,10 @@ class AnnotationsAPI extends TerraformStack {
               name: 'HIGHLIGHT_NOTES_NOTE',
               value: config.dynamodb.notesTable.note,
             },
+            {
+              name: 'SQS_BATCH_DELETE_QUEUE_URL',
+              value: `https://sqs.${region.name}.amazonaws.com/${caller.accountId}/${config.envVars.sqsBatchDeleteQueueName}`,
+            },
           ],
           secretEnvVars: [
             {
