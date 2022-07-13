@@ -98,7 +98,7 @@ export class BatchDeleteHandler {
         apiId: 'service', // unused but required for inheritance
         isPremium: false, //setting default `false` - but it shouldn't matter for delete
       })
-        .clearUserData(body.annotationIds)
+        .deleteByAnnotationIds(body.annotationIds)
         .then(() => successCallback('Annotations', userId, traceId));
     } catch (error) {
       failCallback(

@@ -64,7 +64,7 @@ describe('batchDeleteHandler', () => {
     describe('pollQueue', () => {
       it('invokes highlightDataService if a message is returned from poll', async () => {
         const deleteStub = sinon
-          .stub(HighlightsDataService.prototype, 'clearUserData')
+          .stub(HighlightsDataService.prototype, 'deleteByAnnotationIds')
           .resolves();
         sinon
           .stub(SQSClient.prototype, 'send')
@@ -115,7 +115,7 @@ describe('batchDeleteHandler', () => {
       it('sends error to Sentry and Cloudwatch if data service call fails, and schedules poll', async () => {
         const error = new Error(`You got Q'd`);
         sinon
-          .stub(HighlightsDataService.prototype, 'clearUserData')
+          .stub(HighlightsDataService.prototype, 'deleteByAnnotationIds')
           .rejects(error);
         await batchDeleteHandler.handleMessage(fakeMessageBody);
         expect(sentryStub.calledOnceWithExactly(error)).toBe(true);
