@@ -6,7 +6,7 @@ import { SQSRecord } from 'aws-lambda';
 describe('accountDelete handler', () => {
   beforeEach(() => {
     nock(config.endpoint)
-      .post(config.batchDeletePath)
+      .post(config.queueDeletePath)
       .reply(400, { errors: ['this is an error'] });
   });
   it('throws an error if response is not ok', async () => {

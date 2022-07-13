@@ -23,7 +23,7 @@ export default {
         maxMessages: 1,
         waitTimeSeconds: 0,
         defaultPollIntervalSeconds: 300,
-        afterMessagePollIntervalSeconds: 60,
+        afterMessagePollIntervalSeconds: 30,
       },
     },
     region: process.env.AWS_REGION || 'us-east-1',
