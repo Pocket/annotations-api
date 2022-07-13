@@ -27,7 +27,7 @@ export class HighlightsDataService {
   }
 
   /**
-   * Get saved item IDs for a given user.
+   * Get annotation IDs for a given user.
    * @param offset
    * @param limit
    */
