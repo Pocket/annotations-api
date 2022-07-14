@@ -19,7 +19,7 @@ export type SqsMessage = {
   userId: number;
   email: string;
   isPremium: boolean;
-  annotationIds: number[];
+  annotationIds: string[];
   traceId: string;
 };
 

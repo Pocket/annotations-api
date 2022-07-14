@@ -27,7 +27,7 @@ describe('/queueDelete', () => {
 
       data.push({
         user_id: 1,
-        annotation_id: i,
+        annotation_id: `${i}`,
         item_id: i,
         version: 1,
         status: 1,
@@ -100,12 +100,12 @@ describe('/queueDelete', () => {
       );
       expect(firstMessage).to.shallowDeepEqual({
         ...data,
-        annotationIds: [1, 2, 3],
+        annotationIds: ['1', '2', '3'],
       });
       expect(firstMessage.traceId).to.not.be.empty;
       expect(secondMessage).to.shallowDeepEqual({
         ...data,
-        annotationIds: [4, 5, 6],
+        annotationIds: ['4', '5', '6'],
       });
       expect(secondMessage.traceId).to.not.be.empty;
     });

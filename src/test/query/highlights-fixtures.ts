@@ -22,7 +22,7 @@ export const seedData = (now) => ({
   user_annotations: [
     {
       // One highlight on an item
-      annotation_id: 1,
+      annotation_id: '1',
       user_id: 1,
       item_id: 1,
       quote: "'We should rewrite it all,' said Pham.",
@@ -34,7 +34,7 @@ export const seedData = (now) => ({
     },
     {
       // > 1 annotations on an item
-      annotation_id: 2,
+      annotation_id: '2',
       user_id: 1,
       item_id: 2,
       quote:
@@ -46,7 +46,7 @@ export const seedData = (now) => ({
       created_at: now,
     },
     {
-      annotation_id: 3,
+      annotation_id: '3',
       user_id: 1,
       item_id: 2,
       quote: "The word for all this is 'mature programming environment.'",
@@ -57,7 +57,7 @@ export const seedData = (now) => ({
       created_at: now,
     },
     {
-      annotation_id: 4,
+      annotation_id: '4',
       user_id: 1,
       item_id: 2,
       quote:

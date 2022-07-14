@@ -17,7 +17,7 @@ import { failCallback, successCallback } from '../routes/helper';
 export type BatchDeleteMessage = {
   traceId: string;
   userId: number;
-  annotationIds: number[];
+  annotationIds: string[];
 };
 
 export class BatchDeleteHandler {
@@ -86,6 +86,7 @@ export class BatchDeleteHandler {
    * (underlying call to AccountDeleteDataService completed without error)
    */
   async handleMessage(body: BatchDeleteMessage): Promise<boolean> {
+    console.log(`handling message` + JSON.stringify(body));
     const traceId = body.traceId ?? nanoid();
     const userId = body.userId.toString();
     try {
@@ -135,6 +136,7 @@ export class BatchDeleteHandler {
    * to minimize database load.
    */
   async pollQueue() {
+    console.log('emitter on');
     const params = {
       AttributeNames: ['SentTimestamp'],
       MaxNumberOfMessages: config.aws.sqs.annotationsDeleteQueue.maxMessages,
@@ -148,10 +150,12 @@ export class BatchDeleteHandler {
     let data: ReceiveMessageCommandOutput;
     let body: BatchDeleteMessage;
 
+    console.log('fetching messages from the sqs queue');
     try {
       data = await this.sqsClient.send(new ReceiveMessageCommand(params));
       if (data.Messages && data.Messages.length > 0) {
         body = JSON.parse(data.Messages[0].Body);
+        console.log('fetched message ->' + JSON.stringify(body));
       }
     } catch (error) {
       const receiveError = 'Error receiving messages from queue';
