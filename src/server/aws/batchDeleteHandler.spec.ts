@@ -11,7 +11,7 @@ describe('batchDeleteHandler', () => {
   const batchDeleteHandler = new BatchDeleteHandler(emitter, false);
   const fakeMessageBody: BatchDeleteMessage = {
     traceId: 'abc-123',
-    annotationIds: [1, 2, 3, 4, 5],
+    annotationIds: ['1', '2', '3', '4', '5'],
     userId: 123,
   };
   let scheduleStub: sinon.SinonStub;
@@ -70,7 +70,9 @@ describe('batchDeleteHandler', () => {
           .stub(SQSClient.prototype, 'send')
           .resolves({ Messages: [{ Body: JSON.stringify(fakeMessageBody) }] });
         await batchDeleteHandler.pollQueue();
-        expect(deleteStub.calledOnceWithExactly([1, 2, 3, 4, 5])).toBe(true);
+        expect(
+          deleteStub.calledOnceWithExactly(['1', '2', '3', '4', '5'])
+        ).toBe(true);
       });
       it('schedules polling another message after a delay', async () => {
         sinon
