@@ -3,8 +3,9 @@ import { config } from '../config';
 import fetch from 'node-fetch';
 
 /**
- * Given an account delete event, queue SQS messages to delete user
- * data in the Annotations subgraph.
+ * Given an account delete event, queue SQS messages to delete chunks of the
+ * annotations from the `user_annotations` table. Since we don't want to overload the database,
+ * don't do this in a single operation but in chunks.
  * @param record SQSRecord containing forwarded event from eventbridge
  * @throws Error if response is not ok
  */
@@ -17,7 +18,7 @@ export async function accountDeleteHandler(record: SQSRecord) {
   if (message['traceId']) {
     postBody['traceId'] = message['traceId'];
   }
-  const res = await fetch(config.endpoint + config.batchDeletePath, {
+  const res = await fetch(config.endpoint + config.queueDeletePath, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',

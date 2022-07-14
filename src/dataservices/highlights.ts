@@ -26,6 +26,20 @@ export class HighlightsDataService {
     this.savedItemService = new SavedItem(context);
   }
 
+  /**
+   * Get annotation IDs for a given user.
+   * @param offset
+   * @param limit
+   */
+  public getAnnotationIds(offset: number, limit: number) {
+    return this.writeDb('user_annotations')
+      .where('user_id', this.userId)
+      .orderBy('created_at', 'ASC')
+      .limit(limit)
+      .offset(offset)
+      .pluck('annotation_id');
+  }
+
   private async highlightsCountByItemIds(
     itemIds: number[]
   ): Promise<{ [itemId: string]: number }> {
@@ -234,17 +248,16 @@ export class HighlightsDataService {
   }
 
   /**
-   * Delete all data associated with a given user ID from the database.
+   * Delete data by annotation ids and userId.
    * Typically used when a Pocket User deletes their account.
-   * Depending on a user's behavior, this could be a lot of data to clear;
-   * you should not keep the connection to the api client open while this
-   * operation is completing, and instead use this as a background process.
+   * Called by the batchDelete handler.
    * The calling function should handle any errors thrown by this method.
    */
-  public async clearUserData() {
+  public async deleteByAnnotationIds(annotationIds: number[]) {
     await this.writeDb('user_annotations')
-      .where('user_id', this.userId)
-      .delete();
+      .delete()
+      .whereIn('annotation_id', annotationIds)
+      .andWhere({ user_id: this.userId });
   }
 
   /**

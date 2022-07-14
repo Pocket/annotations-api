@@ -51,6 +51,7 @@ export const config = {
   envVars: {
     databasePort: '3306',
     databaseTz: 'US/Central',
+    sqsBatchDeleteQueueName: `${name}-${environment}-Batch-Delete-Consumer-Queue`,
   },
   dynamodb: {
     notesTable: {
