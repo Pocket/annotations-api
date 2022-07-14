@@ -5,7 +5,9 @@ import AWSXRay from 'aws-xray-sdk-core';
 import xrayExpress from 'aws-xray-sdk-express';
 import express from 'express';
 import https from 'https';
-import batchDeleteRouter from './server/routes/batchDelete';
+import { EventEmitter } from 'events';
+import queueDeleteRouter from './server/routes/queueDelete';
+import { BatchDeleteHandler } from './server/aws/batchDeleteHandler';
 
 const serviceName = 'annotations-api';
 
@@ -27,12 +29,15 @@ Sentry.init({
   debug: config.sentry.environment == 'development',
 });
 
+// Start BatchDelete queue polling
+new BatchDeleteHandler(new EventEmitter());
+
 const server = getServer();
 
 const app = express();
 
 app.use(express.json());
-app.use('/batchDelete', batchDeleteRouter);
+app.use('/queueDelete', queueDeleteRouter);
 
 //If there is no host header (really there always should be..) then use parser-wrapper as the name
 app.use(xrayExpress.openSegment(serviceName));

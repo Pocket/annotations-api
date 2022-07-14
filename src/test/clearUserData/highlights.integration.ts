@@ -25,7 +25,7 @@ describe('clearUserData for Highlights data', () => {
       isPremium: true,
       apiId: '123',
     });
-    await highlightService.clearUserData();
+    await highlightService.deleteByAnnotationIds([1, 2, 3, 4]);
     const res = await db('user_annotations')
       .select()
       .where('user_id', userId)
@@ -45,7 +45,7 @@ describe('clearUserData for Highlights data', () => {
       .select()
       .where('user_id', randomId)
       .pluck('user_id');
-    await highlightService.clearUserData();
+    await highlightService.deleteByAnnotationIds([1, 2, 3, 4]);
     expect(res.length).toEqual(0);
   });
 });

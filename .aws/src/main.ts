@@ -15,6 +15,7 @@ import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/kms';
 import { config } from './config';
 import {
   ApplicationRedis,
+  ApplicationSQSQueue,
   PocketALBApplication,
   PocketECSCodePipeline,
   PocketPagerDuty,
@@ -65,6 +66,13 @@ class AnnotationsAPI extends TerraformStack {
         dependsOn: [lambda.sqsQueueResource as sqs.SqsQueue],
       }
     );
+
+    new ApplicationSQSQueue(this, 'batch-delete-consumer-queue', {
+      name: config.envVars.sqsBatchDeleteQueueName,
+      tags: config.tags,
+      //need to set maxReceiveCount to enable DLQ
+      maxReceiveCount: 2,
+    });
 
     const pocketApp = this.createPocketAlbApplication({
       pagerDuty: this.createPagerDuty(),
@@ -268,6 +276,10 @@ class AnnotationsAPI extends TerraformStack {
               name: 'HIGHLIGHT_NOTES_NOTE',
               value: config.dynamodb.notesTable.note,
             },
+            {
+              name: 'SQS_BATCH_DELETE_QUEUE_URL',
+              value: `https://sqs.${region.name}.amazonaws.com/${caller.accountId}/${config.envVars.sqsBatchDeleteQueueName}`,
+            },
           ],
           secretEnvVars: [
             {
@@ -384,6 +396,19 @@ class AnnotationsAPI extends TerraformStack {
               'xray:GetSamplingStatisticSummaries',
             ],
             resources: ['*'],
+            effect: 'Allow',
+          },
+          {
+            //no permission for batchReceive as we want only one message polled at a time
+            actions: [
+              'sqs:ReceiveMessage',
+              'sqs:DeleteMessage',
+              'sqs:SendMessage',
+              'sqs:SendMessageBatch',
+            ],
+            resources: [
+              `arn:aws:sqs:${region.name}:${caller.accountId}:${config.envVars.sqsBatchDeleteQueueName}`,
+            ],
             effect: 'Allow',
           },
         ],
