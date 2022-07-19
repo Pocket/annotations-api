@@ -8,6 +8,8 @@ import { UserInputError } from 'apollo-server-errors';
 import { groupByCount, sumByKey } from '../utils/dataAggregation';
 import { UsersMeta } from './usersMeta';
 import { SavedItem } from './savedItem';
+import { failCallback } from '../server/routes/helper';
+import { setTimeout } from 'timers/promises';
 
 export class HighlightsDataService {
   public readonly userId: string;
@@ -251,13 +253,36 @@ export class HighlightsDataService {
    * Delete data by annotation ids and userId.
    * Typically used when a Pocket User deletes their account.
    * Called by the batchDelete handler.
-   * The calling function should handle any errors thrown by this method.
+   * Deletes one row at a time, sleep for `deleteDelayInMilliSec`.
+   * If delete fails, log error and move on to the next row for deletion.
    */
-  public async deleteByAnnotationIds(annotationIds: string[]) {
-    await this.writeDb('user_annotations')
-      .delete()
-      .whereIn('annotation_id', annotationIds)
-      .andWhere({ user_id: this.userId });
+  public async deleteByAnnotationIds(
+    annotationIds: string[],
+    requestId: string
+  ) {
+    for (const id of annotationIds) {
+      try {
+        await this.writeDb('user_annotations')
+          .delete()
+          .where('annotation_id', id)
+          .andWhere({ user_id: this.userId });
+
+        console.log(
+          `deleted row from table user_annotations for ` +
+            `user: ${this.userId} and annotation_id: ${id}; requestId: ${requestId}`
+        );
+        await setTimeout(config.batchDelete.deleteDelayInMilliSec);
+      } catch (error) {
+        failCallback(
+          'batchDelete',
+          error,
+          'Annotations',
+          this.userId,
+          requestId,
+          id
+        );
+      }
+    }
   }
 
   /**
