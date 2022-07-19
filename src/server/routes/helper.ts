@@ -15,7 +15,7 @@ export const failCallback = (
   dataType: string,
   userId: string,
   traceId: string,
-  annotationIds?: number[]
+  annotationIds?: string[]
 ) => {
   const failMessage = `${module}: Error = Failed to delete ${dataType} for userId=${userId}, traceId=${traceId}`;
   Sentry.addBreadcrumb({ message: failMessage });

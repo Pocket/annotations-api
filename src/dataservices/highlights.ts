@@ -253,7 +253,7 @@ export class HighlightsDataService {
    * Called by the batchDelete handler.
    * The calling function should handle any errors thrown by this method.
    */
-  public async deleteByAnnotationIds(annotationIds: number[]) {
+  public async deleteByAnnotationIds(annotationIds: string[]) {
     await this.writeDb('user_annotations')
       .delete()
       .whereIn('annotation_id', annotationIds)
