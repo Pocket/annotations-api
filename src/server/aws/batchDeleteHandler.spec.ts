@@ -71,7 +71,7 @@ describe('batchDeleteHandler', () => {
           .resolves({ Messages: [{ Body: JSON.stringify(fakeMessageBody) }] });
         await batchDeleteHandler.pollQueue();
         expect(
-          deleteStub.calledOnceWithExactly(['1', '2', '3', '4', '5'])
+          deleteStub.calledOnceWithExactly(['1', '2', '3', '4', '5'], 'abc-123')
         ).toBe(true);
       });
       it('schedules polling another message after a delay', async () => {

@@ -12,7 +12,7 @@ import { nanoid } from 'nanoid';
 import { readClient, writeClient } from '../../database/client';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import { setTimeout } from 'timers/promises';
-import { failCallback, successCallback } from '../routes/helper';
+import { failCallback } from '../routes/helper';
 
 export type BatchDeleteMessage = {
   traceId: string;
@@ -98,18 +98,9 @@ export class BatchDeleteHandler {
         },
         apiId: 'service', // unused but required for inheritance
         isPremium: false, //setting default `false` - but it shouldn't matter for delete
-      })
-        .deleteByAnnotationIds(body.annotationIds)
-        .then(() => successCallback('Annotations', userId, traceId));
+      }).deleteByAnnotationIds(body.annotationIds, traceId);
     } catch (error) {
-      failCallback(
-        'batchDelete',
-        error,
-        'Annotations',
-        userId,
-        traceId,
-        body.annotationIds
-      );
+      failCallback('batchDelete', error, 'Annotations', userId, traceId);
       return false;
     }
     return true;
