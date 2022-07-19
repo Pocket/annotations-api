@@ -98,18 +98,9 @@ export class BatchDeleteHandler {
         },
         apiId: 'service', // unused but required for inheritance
         isPremium: false, //setting default `false` - but it shouldn't matter for delete
-      })
-        .deleteByAnnotationIds(body.annotationIds)
-        .then(() => successCallback('Annotations', userId, traceId));
+      }).deleteByAnnotationIds(body.annotationIds, traceId);
     } catch (error) {
-      failCallback(
-        'batchDelete',
-        error,
-        'Annotations',
-        userId,
-        traceId,
-        body.annotationIds
-      );
+      failCallback('batchDelete', error, 'Annotations', userId, traceId);
       return false;
     }
     return true;
