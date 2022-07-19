@@ -12,7 +12,7 @@ import { nanoid } from 'nanoid';
 import { readClient, writeClient } from '../../database/client';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import { setTimeout } from 'timers/promises';
-import { failCallback, successCallback } from '../routes/helper';
+import { failCallback } from '../routes/helper';
 
 export type BatchDeleteMessage = {
   traceId: string;

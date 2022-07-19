@@ -260,7 +260,7 @@ export class HighlightsDataService {
     annotationIds: string[],
     requestId: string
   ) {
-    for (let id of annotationIds) {
+    for (const id of annotationIds) {
       try {
         await this.writeDb('user_annotations')
           .delete()
