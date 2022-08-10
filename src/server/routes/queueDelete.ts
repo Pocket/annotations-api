@@ -53,7 +53,7 @@ router.post(
     const requestId = req.body.traceId ?? nanoid();
     const userId = req.body.userId;
     const isPremium = req.body.isPremium;
-    new NotesDataService(dynamoClient(), userId)
+    new NotesDataService(dynamoClient(), userId.toString())
       .clearUserData()
       .then(() => successCallback('Notes', userId, requestId))
       .catch((error) =>
