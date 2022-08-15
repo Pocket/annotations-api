@@ -23,9 +23,9 @@
     "@types/jest": "27.4.1",
     "@types/sinon": "10.0.13",
     "jest": "27.5.1",
-    "nock": "^13.2.7",
-    "@types/node-fetch": "^2.6.1",
-    "sinon": "^14.0.0",
+    "nock": "13.2.7",
+    "@types/node-fetch": "2.6.2",
+    "sinon": "14.0.0",
     "ts-jest": "27.1.5"
   }
 }
