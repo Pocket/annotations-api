@@ -19,7 +19,7 @@
     "node-fetch": "^2.6.7"
   },
   "devDependencies": {
-    "@types/aws-lambda": "8.10.104",
+    "@types/aws-lambda": "8.10.106",
     "@types/jest": "27.4.1",
     "@types/sinon": "10.0.13",
     "jest": "27.5.1",
