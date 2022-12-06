@@ -37,7 +37,7 @@ jobs:
       # Checkout the code base #
       ##########################
       - name: Checkout Code
-        uses: actions/checkout@7884fcad6b5d53d10323aee724dc68d8b9096a2e # tag=v2
+        uses: actions/checkout@e2f20e631ae6d7dd3b768f56a5d2af784dd54791 # tag=v2
 
       ##########################
       # Github Super Linter needs
@@ -57,7 +57,7 @@ jobs:
       - name: Lint Code Base
 
         # We use the Github super linter, it can be cranky at times, so in that moment here are the docs https://github.com/github/super-linter
-        uses: docker://ghcr.io/github/super-linter:slim-v4@sha256:508e6fdb931dc0b722286ca49d9fc806fe4d9f994ac263757a541bf1ca712b56
+        uses: docker://ghcr.io/github/super-linter:slim-v4@sha256:900277f36d47d5ddc460d901ea9dfcb1d348f7390066f800a0895cd88866b31f
 
         # All Environment variables are defined here https://github.com/github/super-linter#environment-variables
         env:
