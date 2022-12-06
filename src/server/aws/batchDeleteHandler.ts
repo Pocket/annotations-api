@@ -46,14 +46,15 @@ export class BatchDeleteHandler {
       endpoint: config.aws.endpoint,
       maxAttempts: 3,
     });
-    emitter.on(
-      BatchDeleteHandler.eventName,
-      async () => await this.pollQueue()
-    );
-    // Start the polling by emitting an initial event
-    if (pollOnInit) {
-      emitter.emit(BatchDeleteHandler.eventName);
-    }
+    //todo: uncomment to re-enable deletion of user-highlights
+    // emitter.on(
+    //   BatchDeleteHandler.eventName,
+    //   async () => await this.pollQueue()
+    // );
+    // // Start the polling by emitting an initial event
+    // if (pollOnInit) {
+    //   emitter.emit(BatchDeleteHandler.eventName);
+    // }
   }
 
   /**
@@ -115,7 +116,8 @@ export class BatchDeleteHandler {
     if (timeout > 0) {
       await setTimeout(timeout);
     }
-    this.emitter.emit(BatchDeleteHandler.eventName);
+    //todo: uncomment to re-enable deletion of user-highlights
+    //this.emitter.emit(BatchDeleteHandler.eventName);
   }
 
   /**
