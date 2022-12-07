@@ -1,20 +1,29 @@
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import { getServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import { ContextManager, getMockContextManager, IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import {
   CREATE_HIGHLIGHTS,
   CREATE_HIGHLIGHTS_WITH_NOTE,
 } from './highlights-mutations';
-import { HighlightInput } from '../../types';
+import { Highlight, HighlightInput } from '../../types';
 import { UsersMeta } from '../../dataservices/usersMeta';
 import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
+import assert from 'assert';
+// import { GraphQLResponseBody } from '@apollo/server/dist/esm/externalTypes/graphql';
 
+/**
+ * executeOperation proposal
+ *
+ * continue using server.executeOperation, providing it with a
+ * real context object with mocks replacing any class members
+ * that access the express.Request
+ */
 describe('Highlights creation', () => {
-  let server: ApolloServer;
+  let server: ApolloServer<IContext>;
   // Stubs/mocks
   let contextStub;
   let premiumStub;
@@ -60,11 +69,44 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      /*
+      Notes:
+      The server has changed a good bit architecturally. The server is now more
+      of a plugin for HTTP servers, rather than having internal plugins that act
+      as a HTTP server. They've probably done this to simplify their plugin
+      interfaces more stable, but everything that touches an Express.Request (or
+      anything HTTP really) is external to the ApolloServer.  Consequently, this
+      parts of ContextManager or the entire context value have to be mocked.
+
+      executeOperation also now handles @defer, and returns a discriminated union
+      that may be a single result or an async iterator.
+      */
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          // context value must be manually provided
+          contextValue: getMockContextManager(),
+        }
+      );
+      /*
+      this assert specifies to typescript that the response is not using
+      a query that uses @defer.
+
+      (body as Extract<GraphQLResponseBody, { kind: 'single' }>).singleResult
+      is also viable if we don't want to use node assert, but isn't any more
+      readable. This type is not defined and exported and must be extracted
+      from the union if we want to use it.
+      */
+      assert(body.kind === 'single');
+
+      // body could be typed using GraphQLResponseBody<mutationType> instead if
+      // mutation types were available, casting instead.
+      const result = body.singleResult.data?.createSavedItemHighlights as [
+        Highlight
+      ];
 
       // Check the whole object and its fields
       const expectedHighlight = {
@@ -94,12 +136,19 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-
-      const result = res.data?.createSavedItemHighlights;
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const result = body.singleResult.data?.createSavedItemHighlights as [
+        Highlight
+      ];
 
       expect(result.length).toEqual(1);
       expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
@@ -122,10 +171,15 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
+      await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
 
       const usersMetaRecord = await db('users_meta')
         .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
@@ -184,10 +238,17 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const res = body.singleResult;
 
       expect(res.errors).not.toBeUndefined;
       expect(res.errors!.length).toEqual(1);
@@ -211,10 +272,18 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const res = body.singleResult;
+
       expect(res.errors).not.toBeUndefined;
       expect(res.errors!.length).toEqual(1);
       expect(res.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
@@ -231,13 +300,23 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const res = body.singleResult;
+
       expect(res.errors).toBeUndefined;
       expect(res.data).toBeTruthy();
-      expect(res.data?.createSavedItemHighlights.length).toEqual(1);
+      expect(
+        (res.data?.createSavedItemHighlights as [Highlight]).length
+      ).toEqual(1);
     });
   });
   describe('premium users', () => {
@@ -262,11 +341,19 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS_WITH_NOTE,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS_WITH_NOTE,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const result = body.singleResult.data?.createSavedItemHighlights as [
+        Highlight
+      ];
 
       // Check the whole object and its fields
       const expectedHighlight = {
@@ -314,11 +401,18 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS_WITH_NOTE,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS_WITH_NOTE,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const result = body.singleResult.data
+        ?.createSavedItemHighlights as Highlight[];
 
       expect(result.length).toEqual(3);
       expect(result[0].note?.text).toBe('This is the coolest of notes');
@@ -354,11 +448,18 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const { body } = await server.executeOperation(
+        {
+          query: CREATE_HIGHLIGHTS,
+          variables,
+        },
+        {
+          contextValue: getMockContextManager(),
+        }
+      );
+      assert(body.kind === 'single');
+      const result = body.singleResult.data
+        ?.createSavedItemHighlights as Highlight[];
 
       expect(result.length).toEqual(4);
       const expectedQuotes = variables.input.map((_) => _.quote);
@@ -385,11 +486,18 @@ describe('Highlights creation', () => {
             },
           ],
         };
-        const res = await server.executeOperation({
-          query: CREATE_HIGHLIGHTS,
-          variables,
-        });
-        const result = res.data?.createSavedItemHighlights;
+        const { body } = await server.executeOperation(
+          {
+            query: CREATE_HIGHLIGHTS,
+            variables,
+          },
+          {
+            contextValue: getMockContextManager(),
+          }
+        );
+        assert(body.kind === 'single');
+        const result = body.singleResult.data
+          ?.createSavedItemHighlights as Highlight[];
 
         expect(result.length).toEqual(2);
         const expectedQuotes = variables.input.map((_) => _.quote);

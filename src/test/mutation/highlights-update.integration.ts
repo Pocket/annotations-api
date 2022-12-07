@@ -1,17 +1,42 @@
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { ClientError, request } from 'graphql-request';
 import { getServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import { ContextManager, IContext, getMockContextManager } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
-import { UPDATE_HIGHLIGHT } from './highlights-mutations';
 import { HighlightEntity, HighlightInput } from '../../types';
 import { UsersMeta } from '../../dataservices/usersMeta';
 import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
+import {
+  UpdateSavedItemHighlightDocument,
+  UpdateSavedItemHighlightMutation,
+  UpdateSavedItemHighlightMutationVariables,
+} from './client-types';
+
+/**
+ * HTTP Requests with generated types proposal
+ *
+ * Using the apollo standalone server, but it would be possible to
+ * start up express servers instead.
+ *
+ * This has a few additional changes outside this file. The `client-types.ts`
+ * file in this directory is generated using `npm run codegen:graphql-types`,
+ * generating types for the queries in `highlights-mutations.test.graphql`
+ * using the config in `codegen.yml`.
+ */
+
+// helper to ensure we do not conflict with other tests
+// this could live somewhere common and have retry helper
+// for restarting the server if we want to really be careful
+const getRandomPort = (min = 10000, max = 20000) =>
+  Math.floor(Math.random() * (max - min) + min);
 
 describe('Highlights update', () => {
-  let server: ApolloServer;
+  let server: ApolloServer<IContext>;
+  let url: string;
   let contextStub;
   const userId = 1;
   const db = readClient();
@@ -28,8 +53,16 @@ describe('Highlights update', () => {
   beforeAll(async () => {
     contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
     server = getServer();
+    ({ url } = await startStandaloneServer(server, {
+      // this could be the proper contextManager if we were using
+      // the express server, and we could avoid mocks entirely.
+      // using the mock to show how usage works below.
+      context: async () => getMockContextManager(),
+      listen: { port: getRandomPort() },
+    }));
   });
-  afterAll(() => {
+  afterAll(async () => {
+    await server.stop();
     contextStub.restore();
   });
   beforeEach(async () => {
@@ -42,21 +75,23 @@ describe('Highlights update', () => {
       shouldAdvanceTime: false,
     });
 
-    const input = {
+    const input: UpdateSavedItemHighlightMutationVariables['input'] = {
       itemId: '1',
       version: 2,
       patch: 'Prow scuttle parrel',
       quote: 'provost Sail ho shrouds spirits boom',
     };
     const id = '1';
-    const variables: { id: string; input: HighlightInput } = {
+    const variables: UpdateSavedItemHighlightMutationVariables = {
       id,
       input,
     };
-    const res = await server.executeOperation({
-      query: UPDATE_HIGHLIGHT,
-      variables,
-    });
+
+    // data is typed!  check me out in your editor
+    const data = await request<
+      UpdateSavedItemHighlightMutation,
+      UpdateSavedItemHighlightMutationVariables
+    >(url, UpdateSavedItemHighlightDocument, variables);
 
     const usersMetaRecord = await db('users_meta')
       .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
@@ -65,11 +100,11 @@ describe('Highlights update', () => {
       .where({ user_id: '1', item_id: '1' })
       .pluck('time_updated');
 
-    expect(res?.data?.updateSavedItemHighlight).toBeTruthy();
-    expect(res?.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
-    expect(res?.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
-    expect(res?.data?.updateSavedItemHighlight.version).toEqual(input.version);
-    expect(res?.data?.updateSavedItemHighlight.id).toEqual(id);
+    expect(data?.updateSavedItemHighlight).toBeTruthy();
+    expect(data?.updateSavedItemHighlight.patch).toEqual(input.patch);
+    expect(data?.updateSavedItemHighlight.quote).toEqual(input.quote);
+    expect(data?.updateSavedItemHighlight.version).toEqual(input.version);
+    expect(data?.updateSavedItemHighlight.id).toEqual(id);
     expect(usersMetaRecord[0]).toEqual(
       mysqlTimeString(updateDate, config.database.tz)
     );
@@ -80,7 +115,7 @@ describe('Highlights update', () => {
     clock.restore();
   });
   it('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
-    const variables: { id: string; input: HighlightInput } = {
+    const variables: UpdateSavedItemHighlightMutationVariables = {
       id: '999',
       input: {
         itemId: '1',
@@ -89,12 +124,17 @@ describe('Highlights update', () => {
         quote: 'provost Sail ho shrouds spirits boom',
       },
     };
-    const res = await server.executeOperation({
-      query: UPDATE_HIGHLIGHT,
-      variables,
-    });
+    // this client rejects on errors. There is a lot more returned
+    // with the response, but this is a small snippet to extract the
+    // error
+    const res = (await request<
+      UpdateSavedItemHighlightMutation,
+      UpdateSavedItemHighlightMutationVariables
+    >(url, UpdateSavedItemHighlightDocument, variables)
+      // catch and return error inline, could also try/catch
+      .catch((error) => error)) as ClientError;
 
-    expect(res?.errors?.[0]?.message).toContain(
+    expect(res?.response?.errors?.[0]?.message).toContain(
       'Error - Not Found: No annotation found for the given ID'
     );
 
@@ -122,17 +162,22 @@ describe('Highlights update', () => {
         quote: 'Belay yo-ho-ho keelhaul squiffy black spot',
       },
     };
-    const res = await server.executeOperation({
-      query: UPDATE_HIGHLIGHT,
-      variables,
-    });
+    // this client rejects on errors. There is a lot more returned
+    // with the response, but this is a small snippet to extract the
+    // error
+    const res = (await request<
+      UpdateSavedItemHighlightMutation,
+      UpdateSavedItemHighlightMutationVariables
+    >(url, UpdateSavedItemHighlightDocument, variables)
+      // catch and return error inline, could also try/catch
+      .catch((error) => error)) as ClientError;
 
     const dbRow = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
 
     expect(dbRow.length).toEqual(1);
-    expect(res?.errors?.[0].message).toContain(
+    expect(res?.response?.errors?.[0].message).toContain(
       'Error - Not Found: No annotation found for the given ID'
     );
   });

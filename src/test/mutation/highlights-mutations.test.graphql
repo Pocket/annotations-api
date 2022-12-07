@@ -1,0 +1,36 @@
+mutation CreateHighlights($input: [CreateHighlightInput!]!) {
+  createSavedItemHighlights(input: $input) {
+    id
+    patch
+    version
+    quote
+    _createdAt
+    _updatedAt
+  }
+}
+mutation CreateHighlightsWithNote($input: [CreateHighlightInput!]!) {
+  createSavedItemHighlights(input: $input) {
+    id
+    patch
+    version
+    quote
+    _createdAt
+    _updatedAt
+    note {
+      text
+    }
+  }
+}
+mutation updateSavedItemHighlight($id: ID!, $input: CreateHighlightInput!) {
+  updateSavedItemHighlight(id: $id, input: $input) {
+    id
+    patch
+    version
+    quote
+    _createdAt
+    _updatedAt
+  }
+}
+mutation DeleteHighlight($id: ID!) {
+  deleteSavedItemHighlight(id: $id)
+}

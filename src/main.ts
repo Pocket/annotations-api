@@ -1,15 +1,20 @@
 import * as Sentry from '@sentry/node';
 import config from './config';
+import { expressMiddleware } from '@apollo/server/express4';
 import { getServer } from './server';
 import AWSXRay from 'aws-xray-sdk-core';
 import xrayExpress from 'aws-xray-sdk-express';
 import express from 'express';
 import https from 'https';
+import cors from 'cors';
 import { EventEmitter } from 'events';
 import queueDeleteRouter from './server/routes/queueDelete';
 import { BatchDeleteHandler } from './server/aws/batchDeleteHandler';
+import { ContextManager } from './context';
+import { dynamoClient, readClient, writeClient } from './database/client';
 
 const serviceName = 'annotations-api';
+const GRAPHQL_PATH = '/graphql';
 
 //Set XRAY to just log if the context is missing instead of a runtime error
 AWSXRay.setContextMissingStrategy('LOG_ERROR');
@@ -29,31 +34,48 @@ Sentry.init({
   debug: config.sentry.environment == 'development',
 });
 
-// Start BatchDelete queue polling
-new BatchDeleteHandler(new EventEmitter());
+(async () => {
+  // Start BatchDelete queue polling
+  new BatchDeleteHandler(new EventEmitter());
 
-const server = getServer();
+  const server = getServer();
 
-const app = express();
+  const app = express();
 
-app.use(express.json());
-app.use('/queueDelete', queueDeleteRouter);
+  app.use(express.json());
+  app.use('/queueDelete', queueDeleteRouter);
 
-//If there is no host header (really there always should be..) then use parser-wrapper as the name
-app.use(xrayExpress.openSegment(serviceName));
+  app.get('/.well-known/apollo/server-health', (req, res) => {
+    res.status(200).send('ok');
+  });
 
-//Set XRay to use the host header to open its segment name.
-AWSXRay.middleware.enableDynamicNaming('*');
+  //If there is no host header (really there always should be..) then use parser-wrapper as the name
+  app.use(xrayExpress.openSegment(serviceName));
 
-//Apply the GraphQL middleware into the express app
-server.start().then(() => {
-  server.applyMiddleware({ app, path: '/' });
-});
+  //Set XRay to use the host header to open its segment name.
+  AWSXRay.middleware.enableDynamicNaming('*');
 
-//Make sure the express app has the xray close segment handler
-app.use(xrayExpress.closeSegment());
+  //Apply the GraphQL middleware into the express app
+  await server.start();
 
-// The `listen` method launches a web server.
-app.listen({ port: 4008 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4008${server.graphqlPath}`)
-);
+  app.use(
+    GRAPHQL_PATH,
+    cors<cors.CorsRequest>,
+    expressMiddleware(server, {
+      context: async ({ req }) =>
+        new ContextManager({
+          request: req,
+          db: { readClient: readClient(), writeClient: writeClient() },
+          dynamoClient: dynamoClient(),
+        }),
+    })
+  );
+
+  //Make sure the express app has the xray close segment handler
+  app.use(xrayExpress.closeSegment());
+
+  // The `listen` method launches a web server.
+  app.listen({ port: 4008 }, () =>
+    console.log(`🚀 Server ready at http://localhost:4008${GRAPHQL_PATH}`)
+  );
+})();

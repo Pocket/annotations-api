@@ -92,3 +92,26 @@ export function getContext(req: Request): ContextManager {
     dynamoClient: dynamoClient(),
   });
 }
+
+/**
+ * For use in tests only.
+ *
+ * server.executeOperation must be provided a context in apollo v4, and the
+ * production server factory requires an Express.Request. This mock context
+ * allows easily building ContextManagers without an Express.Request
+ *
+ * isPremium() and userId() must be mocked on ContextManager for this to
+ * function correctly.
+ *
+ * @returns ContextManager
+ */
+export function getMockContextManager(): ContextManager {
+  return new ContextManager({
+    request: {},
+    db: {
+      readClient: readClient(),
+      writeClient: writeClient(),
+    },
+    dynamoClient: dynamoClient(),
+  });
+}

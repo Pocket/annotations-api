@@ -1,23 +1,23 @@
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
 import typeDefs from '../typeDefs';
 import { resolvers } from '../resolvers';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { sentryPlugin } from '@pocket-tools/apollo-utils';
+// import { sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
-  ApolloServerPluginLandingPageGraphQLPlayground,
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginInlineTraceDisabled,
-  ApolloServerPluginInlineTrace,
-} from 'apollo-server-core';
-import { ContextManager } from '../context';
-import { dynamoClient, readClient, writeClient } from '../database/client';
+} from '@apollo/server/plugin/disabled';
+import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
+import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
+import { IContext } from '../context';
 
-export function getServer(): ApolloServer {
-  return new ApolloServer({
+export function getServer(): ApolloServer<IContext> {
+  return new ApolloServer<IContext>({
     csrfPrevention: true,
     schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
     plugins: [
-      sentryPlugin,
+      // TODO: this needs to be re-enabled after sentryPlugin is updated
+      // sentryPlugin,
       process.env.NODE_ENV === 'production'
         ? ApolloServerPluginLandingPageDisabled()
         : ApolloServerPluginLandingPageGraphQLPlayground(),
@@ -25,11 +25,5 @@ export function getServer(): ApolloServer {
         ? ApolloServerPluginInlineTrace()
         : ApolloServerPluginInlineTraceDisabled(),
     ],
-    context: ({ req }) =>
-      new ContextManager({
-        request: req,
-        db: { readClient: readClient(), writeClient: writeClient() },
-        dynamoClient: dynamoClient(),
-      }),
   });
 }
