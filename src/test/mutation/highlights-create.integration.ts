@@ -178,9 +178,9 @@ describe('Highlights creation', () => {
         .set(headers)
         .send({ query: print(CREATE_HIGHLIGHTS), variables });
       expect(res.body.errors).not.toBeUndefined;
-      expect(res.body.errors!.length).toEqual(1);
-      expect(res.body.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
-      expect(res.body.errors![0].message).toContain('Too many highlights');
+      expect(res.body.errors.length).toEqual(1);
+      expect(res.body.errors[0].extensions?.code).toEqual('BAD_USER_INPUT');
+      expect(res.body.errors[0].message).toContain('Too many highlights');
     });
     it('should not allow non-premium users to create additional highlights on a SavedItem that already has highlights, if it would put them over the three-highlight limit', async () => {
       const variables: { input: HighlightInput[] } = {
@@ -204,9 +204,9 @@ describe('Highlights creation', () => {
         .set(headers)
         .send({ query: print(CREATE_HIGHLIGHTS), variables });
       expect(res.body.errors).not.toBeUndefined;
-      expect(res.body.errors!.length).toEqual(1);
-      expect(res.body.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
-      expect(res.body.errors![0].message).toContain('Too many highlights');
+      expect(res.body.errors.length).toEqual(1);
+      expect(res.body.errors[0].extensions?.code).toEqual('BAD_USER_INPUT');
+      expect(res.body.errors[0].message).toContain('Too many highlights');
     });
     it('should not include deleted highlights in the limit', async () => {
       const variables: { input: HighlightInput[] } = {
