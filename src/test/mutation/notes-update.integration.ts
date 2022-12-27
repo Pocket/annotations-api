@@ -101,7 +101,6 @@ describe('Notes update', () => {
         id: '3',
         input: 'sweeter than a bucket full of strawberries',
       };
-      console.log('sending failing test request');
       const res = await request(app)
         .post(graphQLUrl)
         .set(headers)

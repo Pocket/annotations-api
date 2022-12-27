@@ -249,7 +249,6 @@ describe('Highlights creation', () => {
         .post(graphQLUrl)
         .set(headers)
         .send({ query: print(CREATE_HIGHLIGHTS_WITH_NOTE), variables });
-      console.log(res.body);
       const result = res.body.data?.createSavedItemHighlights;
 
       // Check the whole object and its fields
