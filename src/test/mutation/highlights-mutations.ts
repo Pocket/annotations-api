@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 
 export const CREATE_HIGHLIGHTS = gql`
   mutation CreateHighlights($input: [CreateHighlightInput!]!) {

@@ -1,7 +1,9 @@
-import { ApolloServer } from 'apollo-server-express';
-import { getServer } from '../../server';
+import { ApolloServer } from '@apollo/server';
+import { startServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import request from 'supertest';
+import { print } from 'graphql';
+import { IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { UPDATE_HIGHLIGHT } from './highlights-mutations';
@@ -11,9 +13,10 @@ import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
 
 describe('Highlights update', () => {
-  let server: ApolloServer;
-  let contextStub;
-  const userId = 1;
+  let app: Express.Application;
+  let server: ApolloServer<IContext>;
+  let graphQLUrl: string;
+  const headers = { userId: '1', premium: 'false' };
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
@@ -26,11 +29,10 @@ describe('Highlights update', () => {
     );
   };
   beforeAll(async () => {
-    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
-    server = getServer();
+    ({ app, server, url: graphQLUrl } = await startServer(0));
   });
-  afterAll(() => {
-    contextStub.restore();
+  afterAll(async () => {
+    await server.stop();
   });
   beforeEach(async () => {
     await truncateAndSeed();
@@ -53,11 +55,10 @@ describe('Highlights update', () => {
       id,
       input,
     };
-    const res = await server.executeOperation({
-      query: UPDATE_HIGHLIGHT,
-      variables,
-    });
-
+    const res = await request(app)
+      .post(graphQLUrl)
+      .set(headers)
+      .send({ query: print(UPDATE_HIGHLIGHT), variables });
     const usersMetaRecord = await db('users_meta')
       .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
       .pluck('value');
@@ -65,11 +66,13 @@ describe('Highlights update', () => {
       .where({ user_id: '1', item_id: '1' })
       .pluck('time_updated');
 
-    expect(res?.data?.updateSavedItemHighlight).toBeTruthy();
-    expect(res?.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
-    expect(res?.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
-    expect(res?.data?.updateSavedItemHighlight.version).toEqual(input.version);
-    expect(res?.data?.updateSavedItemHighlight.id).toEqual(id);
+    expect(res.body.data?.updateSavedItemHighlight).toBeTruthy();
+    expect(res.body.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
+    expect(res.body.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
+    expect(res.body.data?.updateSavedItemHighlight.version).toEqual(
+      input.version
+    );
+    expect(res.body.data?.updateSavedItemHighlight.id).toEqual(id);
     expect(usersMetaRecord[0]).toEqual(
       mysqlTimeString(updateDate, config.database.tz)
     );
@@ -89,17 +92,16 @@ describe('Highlights update', () => {
         quote: 'provost Sail ho shrouds spirits boom',
       },
     };
-    const res = await server.executeOperation({
-      query: UPDATE_HIGHLIGHT,
-      variables,
-    });
-
-    expect(res?.errors?.[0]?.message).toContain(
+    const res = await request(app)
+      .post(graphQLUrl)
+      .set(headers)
+      .send({ query: print(UPDATE_HIGHLIGHT), variables });
+    expect(res.body.errors?.[0]?.message).toContain(
       'Error - Not Found: No annotation found for the given ID'
     );
 
     // this is really supposed to throw a NOT_FOUND error but in a test env it throws INTERNAL_SERVER_ERROR
-    // expect(res?.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
+    // expect(res.body.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
   });
   it('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
     await db('user_annotations').insert({
@@ -122,17 +124,16 @@ describe('Highlights update', () => {
         quote: 'Belay yo-ho-ho keelhaul squiffy black spot',
       },
     };
-    const res = await server.executeOperation({
-      query: UPDATE_HIGHLIGHT,
-      variables,
-    });
-
+    const res = await request(app)
+      .post(graphQLUrl)
+      .set(headers)
+      .send({ query: print(UPDATE_HIGHLIGHT), variables });
     const dbRow = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
 
     expect(dbRow.length).toEqual(1);
-    expect(res?.errors?.[0].message).toContain(
+    expect(res.body.errors?.[0].message).toContain(
       'Error - Not Found: No annotation found for the given ID'
     );
   });

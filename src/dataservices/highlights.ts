@@ -1,10 +1,9 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
 import { Highlight, HighlightEntity, HighlightInput } from '../types';
-import { NotFoundError } from '@pocket-tools/apollo-utils';
+import { NotFoundError, UserInputError } from '@pocket-tools/apollo-utils';
 import { v4 as uuid } from 'uuid';
 import config from '../config';
-import { UserInputError } from 'apollo-server-errors';
 import { groupByCount, sumByKey } from '../utils/dataAggregation';
 import { UsersMeta } from './usersMeta';
 import { SavedItem } from './savedItem';

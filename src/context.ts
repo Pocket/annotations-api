@@ -1,13 +1,15 @@
 import { Knex } from 'knex';
 import { HighlightNote } from './types';
 import DataLoader from 'dataloader';
-import { AuthenticationError } from 'apollo-server-errors';
-import { Request } from 'express';
+import {
+  AuthenticationError,
+  ForbiddenError,
+} from '@pocket-tools/apollo-utils';
+import express from 'express';
 import { dynamoClient, readClient, writeClient } from './database/client';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { createNotesLoader } from './dataservices/dataloaders';
 import { NotesDataService } from './dataservices/notes';
-import { ForbiddenError } from 'apollo-server-errors';
 
 export interface IContext {
   apiId: string;
@@ -30,7 +32,7 @@ export class ContextManager implements IContext {
 
   constructor(
     private config: {
-      request: any;
+      request: express.Request;
       db: { readClient: Knex; writeClient: Knex };
       dynamoClient: DynamoDBClient;
     }
@@ -45,7 +47,7 @@ export class ContextManager implements IContext {
   dynamoClient: DynamoDBClient;
   get isPremium(): boolean {
     // Using getter to make it easier to stub in tests
-    return this.config.request?.headers.premium ?? false;
+    return this.config.request?.headers.premium === 'true';
   }
 
   get userId(): string {
@@ -82,7 +84,11 @@ export class ContextManager implements IContext {
  * @param req server request
  * @returns ContextManager
  */
-export function getContext(req: Request): ContextManager {
+export async function getContext({
+  req,
+}: {
+  req: express.Request;
+}): Promise<ContextManager> {
   return new ContextManager({
     request: req,
     db: {

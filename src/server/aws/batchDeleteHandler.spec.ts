@@ -12,7 +12,7 @@ describe('batchDeleteHandler', () => {
   const fakeMessageBody: BatchDeleteMessage = {
     traceId: 'abc-123',
     annotationIds: ['1', '2', '3', '4', '5'],
-    userId: 123,
+    userId: '1'23,
   };
   let scheduleStub: sinon.SinonStub;
   let sentryStub: sinon.SinonStub;
