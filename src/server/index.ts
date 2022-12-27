@@ -20,8 +20,6 @@ import typeDefs from '../typeDefs';
 import { resolvers } from '../resolvers';
 import config from '../config';
 import { getContext, IContext } from '../context';
-import { EventEmitter } from 'events';
-import { BatchDeleteHandler } from './aws/batchDeleteHandler';
 import queueDeleteRouter from './routes/queueDelete';
 
 const serviceName = 'annotations-api';
@@ -36,8 +34,8 @@ export async function startServer(port: number): Promise<{
     debug: config.sentry.environment == 'development',
   });
 
-  // Start BatchDelete queue polling
-  new BatchDeleteHandler(new EventEmitter());
+  // // Start BatchDelete queue polling
+  // new BatchDeleteHandler(new EventEmitter());
 
   // initialize express with exposed httpServer so that it may be
   // provided to drain plugin for graceful shutdown.
