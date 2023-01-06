@@ -32,7 +32,7 @@
     "@sentry/tracing": "6.19.7",
     "apollo-server": "3.8.2",
     "apollo-server-cache-redis": "3.3.1",
-    "apollo-server-core": "3.8.2",
+    "apollo-server-core": "3.11.0",
     "apollo-server-errors": "3.3.1",
     "apollo-server-express": "3.8.2",
     "aws-xray-sdk-core": "3.3.7",
