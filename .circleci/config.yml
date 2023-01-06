@@ -252,7 +252,8 @@ workflows:
           context: pocket
           name: test_integrations
 
-      - apollo
+      - apollo:
+          context: pocket-prod
 
       - build:
           context: pocket
