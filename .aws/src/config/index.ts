@@ -15,6 +15,7 @@ const branch = isDev ? 'dev' : 'main';
 const cacheNodes = isDev ? 2 : 2;
 const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
 const appPort = 4008;
+const s3LogsBucket = isDev ? 'pocket-data-items-dev' : 'pocket-data-items';
 
 export const config = {
   name,
@@ -32,6 +33,7 @@ export const config = {
   },
   graphqlVariant,
   cacheNodes,
+  s3LogsBucket,
   reservedConcurrencyLimit: 1,
   cacheSize,
   healthCheck: {
