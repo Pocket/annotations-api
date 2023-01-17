@@ -1,7 +1,9 @@
-import { ApolloServer } from 'apollo-server-express';
-import { getServer } from '../../server';
+import { ApolloServer } from '@apollo/server';
+import { startServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import request from 'supertest';
+import { print } from 'graphql';
+import { IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { DELETE_HIGHLIGHT } from './highlights-mutations';
@@ -11,9 +13,11 @@ import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
 
 describe('Highlights deletion', () => {
-  let server: ApolloServer;
-  let contextStub;
-  const userId = 1;
+  let app: Express.Application;
+  let server: ApolloServer<IContext>;
+  let graphQLUrl: string;
+
+  const headers = { userId: '1', premium: 'false' };
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
@@ -26,17 +30,17 @@ describe('Highlights deletion', () => {
     );
   };
 
-  beforeAll(() => {
-    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
-    server = getServer();
+  beforeAll(async () => {
+    // port 0 tells express to dynamically assign an available port
+    ({ app, server, url: graphQLUrl } = await startServer(0));
+  });
+
+  afterAll(async () => {
+    await server.stop();
   });
 
   beforeEach(async () => {
     await truncateAndSeed();
-  });
-
-  afterAll(() => {
-    contextStub.restore();
   });
 
   it('should delete an existing highlight', async () => {
@@ -47,10 +51,10 @@ describe('Highlights deletion', () => {
     });
 
     const variables = { id: '1' };
-    const res = await server.executeOperation({
-      query: DELETE_HIGHLIGHT,
-      variables,
-    });
+    const res = await request(app)
+      .post(graphQLUrl)
+      .set(headers)
+      .send({ query: print(DELETE_HIGHLIGHT), variables });
     const annotationRecord = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
@@ -62,7 +66,7 @@ describe('Highlights deletion', () => {
       .pluck('time_updated');
 
     expect(res).toBeTruthy();
-    expect(res?.data?.deleteSavedItemHighlight).toBe(variables.id);
+    expect(res.body.data?.deleteSavedItemHighlight).toBe(variables.id);
     expect(annotationRecord[0].status).toBe(0);
     expect(usersMetaRecord[0]).toEqual(
       mysqlTimeString(updateDate, config.database.tz)
@@ -76,15 +80,14 @@ describe('Highlights deletion', () => {
 
   it('should throw NOT_FOUND error if the highlight ID does not exist', async () => {
     const variables = { id: '999' };
-    const res = await server.executeOperation({
-      query: DELETE_HIGHLIGHT,
-      variables,
-    });
+    const res = await request(app)
+      .post(graphQLUrl)
+      .set(headers)
+      .send({ query: print(DELETE_HIGHLIGHT), variables });
+    expect(res.body.errors).toBeTruthy();
 
-    expect(res?.errors).toBeTruthy();
-
-    if (res?.errors) {
-      expect(res?.errors[0].message).toBe(
+    if (res.body.errors) {
+      expect(res.body.errors[0].message).toBe(
         'Error - Not Found: No annotation found for the given ID'
       );
     }

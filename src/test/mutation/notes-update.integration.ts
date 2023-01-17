@@ -1,7 +1,8 @@
-import { ApolloServer } from 'apollo-server-express';
-import { getServer } from '../../server';
-import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import { ApolloServer } from '@apollo/server';
+import { startServer } from '../../server';
+import request from 'supertest';
+import { print } from 'graphql';
+import { IContext } from '../../context';
 import { dynamoClient, readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { UPDATE_NOTE } from './notes-mutations';
@@ -13,12 +14,11 @@ import { noteSeedCommand } from '../query/notes-fixtures';
 import { NotesDataService } from '../../dataservices/notes';
 
 describe('Notes update', () => {
-  let server: ApolloServer;
-  // Stubs/mocks
-  let contextStub;
-  let premiumStub;
+  let app: Express.Application;
+  let server: ApolloServer<IContext>;
+  let graphQLUrl: string;
   // Variables/data
-  const userId = 1;
+  const baseHeaders = { userId: '1', premium: 'false' };
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
@@ -29,8 +29,7 @@ describe('Notes update', () => {
   const dynamodb = DynamoDBDocumentClient.from(client);
 
   beforeAll(async () => {
-    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
-    server = getServer();
+    ({ app, server, url: graphQLUrl } = await startServer(0));
     await Promise.all(
       Object.keys(testData).map((table) => db(table).truncate())
     );
@@ -39,26 +38,22 @@ describe('Notes update', () => {
     );
     await dynamodb.send(noteSeedCommand(now));
   });
-  afterAll(() => {
-    contextStub.restore();
+  afterAll(async () => {
+    await server.stop();
   });
   describe('for premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(true);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = { ...baseHeaders, premium: 'true' };
+
     it('adds a note to an existing higlight without any notes', async () => {
       const variables: NoteInput = {
         id: '3',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: UPDATE_NOTE,
-        variables,
-      });
-      const result = res.data?.updateSavedItemHighlightNote;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(UPDATE_NOTE), variables });
+      const result = res.body.data?.updateSavedItemHighlightNote;
       const expectedHighlight = {
         text: 'sweeter than a bucket full of strawberries',
       };
@@ -69,11 +64,11 @@ describe('Notes update', () => {
         id: '1',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: UPDATE_NOTE,
-        variables,
-      });
-      const result = res.data?.updateSavedItemHighlightNote;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(UPDATE_NOTE), variables });
+      const result = res.body.data?.updateSavedItemHighlightNote;
       const expectedHighlight = {
         text: 'sweeter than a bucket full of strawberries',
       };
@@ -88,36 +83,33 @@ describe('Notes update', () => {
         id: '99999',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: UPDATE_NOTE,
-        variables,
-      });
-      expect(res.data?.updateSavedItemHighlightNote).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Not Found');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(UPDATE_NOTE), variables });
+      expect(res.body.data?.updateSavedItemHighlightNote).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain('Not Found');
     });
   });
 
   describe('for non-premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(false);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = baseHeaders;
+
     it('should throw an invalid permissions error', async () => {
       const variables: NoteInput = {
         id: '3',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: UPDATE_NOTE,
-        variables,
-      });
-
-      expect(res.data?.updateSavedItemHighlightNote).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Premium account required');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(UPDATE_NOTE), variables });
+      expect(res.body.data?.updateSavedItemHighlightNote).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain(
+        'Premium account required'
+      );
     });
   });
 });

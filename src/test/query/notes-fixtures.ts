@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 import { BatchWriteCommandInput, PutCommand } from '@aws-sdk/lib-dynamodb';
 import config from '../../config';
 import Chance from 'chance';

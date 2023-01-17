@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-core';
+import { gql } from 'graphql-tag';
 
 export const CREATE_NOTE = gql`
   mutation createSavedItemHighlightNote($id: ID!, $input: String!) {

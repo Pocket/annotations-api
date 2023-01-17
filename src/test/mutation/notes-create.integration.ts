@@ -1,19 +1,19 @@
-import { ApolloServer } from 'apollo-server-express';
-import { getServer } from '../../server';
-import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import { ApolloServer } from '@apollo/server';
+import { startServer } from '../../server';
+import request from 'supertest';
+import { print } from 'graphql';
+import { IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { CREATE_NOTE } from './notes-mutations';
 import { NoteInput } from '../../types';
 
 describe('Notes creation', () => {
-  let server: ApolloServer;
-  // Stubs/mocks
-  let contextStub;
-  let premiumStub;
+  let app: Express.Application;
+  let server: ApolloServer<IContext>;
+  let graphQLUrl: string;
   // Variables/data
-  const userId = 1;
+  const baseHeaders = { userId: '1', premium: 'false' };
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
@@ -26,32 +26,29 @@ describe('Notes creation', () => {
     );
   };
   beforeAll(async () => {
-    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
-    server = getServer();
+    ({ app, server, url: graphQLUrl } = await startServer(0));
   });
+
+  afterAll(async () => {
+    await server.stop();
+  });
+
   beforeEach(async () => {
     await truncateAndSeed();
   });
-  afterAll(() => {
-    contextStub.restore();
-  });
   describe('for premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(true);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = { ...baseHeaders, premium: 'true' };
+
     it('adds a note to an existing higlight', async () => {
       const variables: NoteInput = {
         id: '3',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: CREATE_NOTE,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlightNote;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_NOTE), variables });
+      const result = res.body.data?.createSavedItemHighlightNote;
       const expectedHighlight = {
         text: 'sweeter than a bucket full of strawberries',
       };
@@ -62,37 +59,33 @@ describe('Notes creation', () => {
         id: '99999',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: CREATE_NOTE,
-        variables,
-      });
-
-      expect(res.data?.createSavedItemHighlightNote).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Not Found');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_NOTE), variables });
+      expect(res.body.data?.createSavedItemHighlightNote).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain('Not Found');
     });
   });
 
   describe('for non-premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(false);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = baseHeaders;
+
     it('should throw an invalid permissions error', async () => {
       const variables: NoteInput = {
         id: '3',
         input: 'sweeter than a bucket full of strawberries',
       };
-      const res = await server.executeOperation({
-        query: CREATE_NOTE,
-        variables,
-      });
-
-      expect(res.data?.createSavedItemHighlightNote).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Premium account required');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_NOTE), variables });
+      expect(res.body.data?.createSavedItemHighlightNote).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain(
+        'Premium account required'
+      );
     });
   });
 });

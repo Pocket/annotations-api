@@ -1,7 +1,9 @@
-import { ApolloServer } from 'apollo-server-express';
-import { getServer } from '../../server';
+import { ApolloServer } from '@apollo/server';
+import { startServer } from '../../server';
 import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import request from 'supertest';
+import { print } from 'graphql';
+import { IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import {
@@ -14,12 +16,11 @@ import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
 
 describe('Highlights creation', () => {
-  let server: ApolloServer;
-  // Stubs/mocks
-  let contextStub;
-  let premiumStub;
+  let app: Express.Application;
+  let server: ApolloServer<IContext>;
+  let graphQLUrl: string;
   // Variables/data
-  const userId = 1;
+  const baseHeaders = { userId: '1', premium: 'false' };
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
@@ -32,23 +33,18 @@ describe('Highlights creation', () => {
     );
   };
   beforeAll(async () => {
-    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
-    server = getServer();
+    // port 0 tells express to dynamically assign an available port
+    ({ app, server, url: graphQLUrl } = await startServer(0));
   });
   afterAll(async () => {
-    contextStub.restore();
+    await server.stop();
     await db.destroy();
   });
   describe('any user', () => {
+    const headers = baseHeaders;
     beforeEach(async () => {
       await truncateAndSeed();
     });
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(false);
-    });
-    afterAll(() => premiumStub.restore());
     it('should create a highlight on a SavedItem without any existing highlights', async () => {
       const variables: { input: HighlightInput[] } = {
         input: [
@@ -60,11 +56,11 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      const result = res.body.data?.createSavedItemHighlights;
 
       // Check the whole object and its fields
       const expectedHighlight = {
@@ -94,12 +90,11 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-
-      const result = res.data?.createSavedItemHighlights;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      const result = res.body.data?.createSavedItemHighlights;
 
       expect(result.length).toEqual(1);
       expect(result[0].quote).toBe('provost Sail ho shrouds spirits boom');
@@ -122,11 +117,10 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-
+      await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
       const usersMetaRecord = await db('users_meta')
         .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
         .pluck('value');
@@ -146,12 +140,7 @@ describe('Highlights creation', () => {
     });
   });
   describe('non-premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(false);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = baseHeaders;
     beforeEach(async () => {
       await truncateAndSeed();
     });
@@ -184,15 +173,14 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-
-      expect(res.errors).not.toBeUndefined;
-      expect(res.errors!.length).toEqual(1);
-      expect(res.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
-      expect(res.errors![0].message).toContain('Too many highlights');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      expect(res.body.errors).not.toBeUndefined;
+      expect(res.body.errors.length).toEqual(1);
+      expect(res.body.errors[0].extensions?.code).toEqual('BAD_USER_INPUT');
+      expect(res.body.errors[0].message).toContain('Too many highlights');
     });
     it('should not allow non-premium users to create additional highlights on a SavedItem that already has highlights, if it would put them over the three-highlight limit', async () => {
       const variables: { input: HighlightInput[] } = {
@@ -211,14 +199,14 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-      expect(res.errors).not.toBeUndefined;
-      expect(res.errors!.length).toEqual(1);
-      expect(res.errors![0].extensions?.code).toEqual('BAD_USER_INPUT');
-      expect(res.errors![0].message).toContain('Too many highlights');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      expect(res.body.errors).not.toBeUndefined;
+      expect(res.body.errors.length).toEqual(1);
+      expect(res.body.errors[0].extensions?.code).toEqual('BAD_USER_INPUT');
+      expect(res.body.errors[0].message).toContain('Too many highlights');
     });
     it('should not include deleted highlights in the limit', async () => {
       const variables: { input: HighlightInput[] } = {
@@ -231,22 +219,17 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-      expect(res.errors).toBeUndefined;
-      expect(res.data).toBeTruthy();
-      expect(res.data?.createSavedItemHighlights.length).toEqual(1);
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      expect(res.body.errors).toBeUndefined;
+      expect(res.body.data).toBeTruthy();
+      expect(res.body.data?.createSavedItemHighlights.length).toEqual(1);
     });
   });
   describe('premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(true);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = { ...baseHeaders, premium: 'true' };
     beforeEach(async () => {
       await truncateAndSeed();
     });
@@ -262,11 +245,11 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS_WITH_NOTE,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS_WITH_NOTE), variables });
+      const result = res.body.data?.createSavedItemHighlights;
 
       // Check the whole object and its fields
       const expectedHighlight = {
@@ -314,11 +297,11 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS_WITH_NOTE,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS_WITH_NOTE), variables });
+      const result = res.body.data?.createSavedItemHighlights;
 
       expect(result.length).toEqual(3);
       expect(result[0].note?.text).toBe('This is the coolest of notes');
@@ -354,11 +337,11 @@ describe('Highlights creation', () => {
           },
         ],
       };
-      const res = await server.executeOperation({
-        query: CREATE_HIGHLIGHTS,
-        variables,
-      });
-      const result = res.data?.createSavedItemHighlights;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      const result = res.body.data?.createSavedItemHighlights;
 
       expect(result.length).toEqual(4);
       const expectedQuotes = variables.input.map((_) => _.quote);
@@ -385,11 +368,11 @@ describe('Highlights creation', () => {
             },
           ],
         };
-        const res = await server.executeOperation({
-          query: CREATE_HIGHLIGHTS,
-          variables,
-        });
-        const result = res.data?.createSavedItemHighlights;
+        const res = await request(app)
+          .post(graphQLUrl)
+          .set(headers)
+          .send({ query: print(CREATE_HIGHLIGHTS), variables });
+        const result = res.body.data?.createSavedItemHighlights;
 
         expect(result.length).toEqual(2);
         const expectedQuotes = variables.input.map((_) => _.quote);

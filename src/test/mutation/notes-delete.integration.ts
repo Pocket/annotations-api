@@ -1,7 +1,8 @@
-import { ApolloServer } from 'apollo-server-express';
-import { getServer } from '../../server';
-import sinon from 'sinon';
-import { ContextManager } from '../../context';
+import { ApolloServer } from '@apollo/server';
+import { startServer } from '../../server';
+import request from 'supertest';
+import { print } from 'graphql';
+import { IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
 import { DELETE_NOTE } from './notes-mutations';
@@ -12,12 +13,11 @@ import { noteSeedCommand } from '../query/notes-fixtures';
 import { NotesDataService } from '../../dataservices/notes';
 
 describe('Notes delete', () => {
-  let server: ApolloServer;
-  // Stubs/mocks
-  let contextStub;
-  let premiumStub;
+  let app: Express.Application;
+  let server: ApolloServer<IContext>;
+  let graphQLUrl: string;
   // Variables/data
-  const userId = 1;
+  const baseHeaders = { userId: '1', premium: 'false' };
   const db = readClient();
   const now = new Date();
   const testData = seedData(now);
@@ -28,8 +28,7 @@ describe('Notes delete', () => {
   const dynamodb = DynamoDBDocumentClient.from(client);
 
   beforeAll(async () => {
-    contextStub = sinon.stub(ContextManager.prototype, 'userId').value(userId);
-    server = getServer();
+    ({ app, server, url: graphQLUrl } = await startServer(0));
     await Promise.all(
       Object.keys(testData).map((table) => db(table).truncate())
     );
@@ -38,68 +37,61 @@ describe('Notes delete', () => {
     );
     await dynamodb.send(noteSeedCommand(now));
   });
-  afterAll(() => {
-    contextStub.restore();
+  afterAll(async () => {
+    await server.stop();
   });
   describe('for premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(true);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = { ...baseHeaders, premium: 'true' };
+
     it('returns NOT_FOUND error if attempting to delete a note from a highlight that has no notes', async () => {
       const variables = { id: '2' };
-      const res = await server.executeOperation({
-        query: DELETE_NOTE,
-        variables,
-      });
-      expect(res.data).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Not Found');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(DELETE_NOTE), variables });
+      expect(res.body.data).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain('Not Found');
     });
     it('deletes a note on a highlight that has a note', async () => {
       const variables = { id: '1' };
-      const res = await server.executeOperation({
-        query: DELETE_NOTE,
-        variables,
-      });
-      const result = res.data?.deleteSavedItemHighlightNote;
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(DELETE_NOTE), variables });
+      const result = res.body.data?.deleteSavedItemHighlightNote;
       expect(result).toEqual('1');
       const dbRecord = await new NotesDataService(client, '1').get('1');
       expect(dbRecord).toBeNull();
     });
     it('returns NOT_FOUND if the highlight does not exist', async () => {
       const variables = { id: '99999' };
-      const res = await server.executeOperation({
-        query: DELETE_NOTE,
-        variables,
-      });
-      expect(res.data).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Not Found');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(DELETE_NOTE), variables });
+      expect(res.body.data).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain('Not Found');
     });
   });
 
   describe('for non-premium users', () => {
-    beforeAll(() => {
-      premiumStub = sinon
-        .stub(ContextManager.prototype, 'isPremium')
-        .value(false);
-    });
-    afterAll(() => premiumStub.restore());
+    const headers = baseHeaders;
+
     it('should throw an invalid permissions error', async () => {
       const variables = {
         id: '3',
       };
-      const res = await server.executeOperation({
-        query: DELETE_NOTE,
-        variables,
-      });
-
-      expect(res.data).toBeNull();
-      expect(res.errors?.length).toEqual(1);
-      expect(res.errors?.[0].message).toContain('Premium account required');
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(DELETE_NOTE), variables });
+      expect(res.body.data).toBeNull();
+      expect(res.body.errors?.length).toEqual(1);
+      expect(res.body.errors?.[0].message).toContain(
+        'Premium account required'
+      );
     });
   });
 });
