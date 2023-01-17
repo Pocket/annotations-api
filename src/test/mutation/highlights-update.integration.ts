@@ -100,8 +100,7 @@ describe('Highlights update', () => {
       'Error - Not Found: No annotation found for the given ID'
     );
 
-    // this is really supposed to throw a NOT_FOUND error but in a test env it throws INTERNAL_SERVER_ERROR
-    // expect(res.body.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
+    expect(res.body.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
   });
   it('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
     await db('user_annotations').insert({
