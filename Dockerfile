@@ -1,4 +1,4 @@
-FROM node:16-bullseye-slim@sha256:e3b0c2c85ab824ec7671e1c2140190147da6c6a699a625a6bd6b3b0b92c70ad7
+FROM node:16-bullseye-slim@sha256:203cf4c2b8f4d912cac0e101fea531a5aae0116f42928da28f3cc9bd8e50817c
 
 WORKDIR /usr/src/app
 
