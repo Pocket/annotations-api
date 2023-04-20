@@ -11,9 +11,8 @@ const githubConnectionArn = isDev
   : 'arn:aws:codestar-connections:us-east-1:996905175585:connection/5fa5aa2b-a2d2-43e3-ab5a-72ececfc1870';
 const branch = isDev ? 'dev' : 'main';
 
-//Arbitrary size and count for cache. No logic was used in deciding this.
 const cacheNodes = isDev ? 2 : 2;
-const cacheSize = isDev ? 'cache.t2.micro' : 'cache.t3.medium';
+const cacheSize = isDev ? 'cache.t3.micro' : 'cache.t3.micro';
 const appPort = 4008;
 const s3LogsBucket = isDev ? 'pocket-data-items-dev' : 'pocket-data-items';
 
