@@ -20,7 +20,7 @@ services:
       - EXTRA_CORS_EXPOSE_HEADERS=ETag
       - HOSTNAME_EXTERNAL=localstack
   mysql:
-    image: mysql:5.6@sha256:20575ecebe6216036d25dab5903808211f1e9ba63dc7825ac20cb975e34cfcae
+    image: mysql:5.7@sha256:9202fc6bc8fa63615e6bfc0049fc660f712d164220c5c54d86519870c305ea48
     platform: linux/amd64
     ports:
       - '3306:3306'
@@ -36,7 +36,7 @@ services:
       - '6379:6379'
 
   app:
-    image: node:16@sha256:1bbd8b82f5a78b6461d3285b62293db99ad60cf4eca35c715636d7143abb057c
+    image: node:18@sha256:33f306d574d22a441f6473d09c851763ff0d44459af682a2ff23b6ec8a06b03e
     working_dir: /app
     ports:
       - '4008:4008'

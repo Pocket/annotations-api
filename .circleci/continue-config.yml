@@ -3,9 +3,8 @@ version: 2.1
 setup: false
 
 orbs:
-  pocket: pocket/circleci-orbs@1.2.7
-  aws-cli: circleci/aws-cli@1.2.1
-
+  pocket: pocket/circleci-orbs@2.1.1
+  aws-cli: circleci/aws-cli@3.1.5
 # the default pipeline parameters, which will be updated according to
 # the results of the path-filtering orb
 parameters:
@@ -61,7 +60,7 @@ jobs:
         type: boolean
         default: true
     docker:
-      - image: circleci/node:14@sha256:6f6b36595d00d61545f502d191c459a52e8f3d55a3607f4e2e2dd8f15a01c9ad
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -109,7 +108,7 @@ jobs:
         type: string
         description: The relative path containing the lambda source code
     docker:
-      - image: cimg/node:14.19@sha256:529d618877cb283d38fdaa3aa3c725ebba662702e704fcefefbbadd99a5bf6b6
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
