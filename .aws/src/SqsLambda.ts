@@ -1,10 +1,12 @@
 import { Resource } from 'cdktf';
 import { Construct } from 'constructs';
 import { config } from './config';
-import { PocketVPC } from '@pocket-tools/terraform-modules';
-import { PocketSQSWithLambdaTarget } from '@pocket-tools/terraform-modules';
-import { LAMBDA_RUNTIMES } from '@pocket-tools/terraform-modules';
-import { PocketPagerDuty } from '@pocket-tools/terraform-modules';
+import {
+  LAMBDA_RUNTIMES,
+  PocketPagerDuty,
+  PocketSQSWithLambdaTarget,
+  PocketVPC,
+} from '@pocket-tools/terraform-modules';
 import { DataAwsRegion } from '@cdktf/provider-aws/lib/data-aws-region';
 import { DataAwsCallerIdentity } from '@cdktf/provider-aws/lib/data-aws-caller-identity';
 
