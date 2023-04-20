@@ -9,10 +9,10 @@ parameters:
     default: true
 
 orbs:
-  pocket: pocket/circleci-orbs@1.2.8
-  aws-cli: circleci/aws-cli@1.2.1
+  pocket: pocket/circleci-orbs@2.1.1
+  aws-cli: circleci/aws-cli@3.1.5
   backstage-entity-validator: roadiehq/backstage-entity-validator@0.4.2
-  path-filtering: circleci/path-filtering@0.1.3
+  path-filtering: circleci/path-filtering@0.1.4
   continuation: circleci/continuation@0.3.1
 
 # Workflow shortcuts
@@ -58,7 +58,7 @@ only_dev: &only_dev
 jobs:
   apollo:
     docker:
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:18.16
     steps:
       - checkout
       - run:
@@ -88,7 +88,7 @@ jobs:
                 command: rover subgraph publish pocket-client-api@development --schema ./schema.graphql --routing-url https://annotations-api.getpocket.dev/ --name=annotations
   build:
     docker:
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:18.16
     steps:
       - checkout
       # Define the working directory for this job
@@ -134,7 +134,7 @@ jobs:
     description: Run integration tests against external services, e.g. MySQL
     docker:
       # The application
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -142,8 +142,8 @@ jobs:
           - NODE_ENV=test
           - AWS_XRAY_LOG_LEVEL=silent
           - AWS_XRAY_CONTEXT_MISSING=LOG_ERROR
-      # Mysql 5.6 service
-      - image: mysql:5.6@sha256:20575ecebe6216036d25dab5903808211f1e9ba63dc7825ac20cb975e34cfcae
+      # Mysql 5.7 service
+      - image: mysql:5.7@sha256:9202fc6bc8fa63615e6bfc0049fc660f712d164220c5c54d86519870c305ea48
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
@@ -195,7 +195,7 @@ jobs:
   test_specs:
     description: Run spec tests
     docker:
-      - image: circleci/node:16@sha256:1803e9ed7deec9456ad2609124b7333d40b2eec0cf34998ae766cbf90c9a3625
+      - image: cimg/node:18.16
         auth:
           username: $DOCKERHUB_USERNAME
           password: $DOCKERHUB_PASSWORD
