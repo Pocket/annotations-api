@@ -5,13 +5,23 @@ import {
   RemoteBackend,
   TerraformStack,
 } from 'cdktf';
-import { AwsProvider, sqs } from '@cdktf/provider-aws';
-import {
-  DataAwsCallerIdentity,
-  DataAwsRegion,
-} from '@cdktf/provider-aws/lib/datasources';
-import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/sns';
-import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/kms';
+import { AwsProvider } from '@cdktf/provider-aws/lib/provider';
+import { SqsQueue } from '@cdktf/provider-aws/lib/sqs-queue';
+// import { AwsProvider, sqs } from '@cdktf/provider-aws';
+import { DataAwsCallerIdentity } from '@cdktf/provider-aws/lib/data-aws-caller-identity';
+import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/data-aws-kms-alias';
+import { DataAwsRegion } from '@cdktf/provider-aws/lib/data-aws-region';
+import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/data-aws-sns-topic';
+import { LocalProvider } from '@cdktf/provider-local/lib/provider';
+import { NullProvider } from '@cdktf/provider-null/lib/provider';
+import { ArchiveProvider } from '@cdktf/provider-archive/lib/provider';
+import { PagerdutyProvider } from '@cdktf/provider-pagerduty/lib/provider';
+// import {
+//   DataAwsCallerIdentity,
+//   DataAwsRegion,
+// } from '@cdktf/provider-aws/lib/datasources';
+// import { DataAwsSnsTopic } from '@cdktf/provider-aws/lib/sns';
+// import { DataAwsKmsAlias } from '@cdktf/provider-aws/lib/kms';
 import { config } from './config';
 import {
   ApplicationRedis,
@@ -22,10 +32,10 @@ import {
   PocketVPC,
   ApplicationSqsSnsTopicSubscription,
 } from '@pocket-tools/terraform-modules';
-import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
-import { LocalProvider } from '@cdktf/provider-local';
-import { NullProvider } from '@cdktf/provider-null';
-import { ArchiveProvider } from '@cdktf/provider-archive';
+// import { PagerdutyProvider } from '@cdktf/provider-pagerduty';
+// import { LocalProvider } from '@cdktf/provider-local';
+// import { NullProvider } from '@cdktf/provider-null';
+// import { ArchiveProvider } from '@cdktf/provider-archive';
 import { DynamoDB } from './dynamodb';
 import { SqsLambda } from './SqsLambda';
 
@@ -51,7 +61,13 @@ class AnnotationsAPI extends TerraformStack {
     const cache = AnnotationsAPI.createElasticache(this, pocketVPC);
     const dynamodb = new DynamoDB(this, 'dynamodb');
 
-    const sqsLambda = new SqsLambda(this, 'sqs-event-consumer', pocketVPC);
+    const sqsLambda = new SqsLambda(
+      this,
+      'sqs-event-consumer',
+      pocketVPC,
+      region,
+      caller
+    );
 
     const lambda = sqsLambda.lambda;
 
@@ -63,7 +79,7 @@ class AnnotationsAPI extends TerraformStack {
         snsTopicArn: `arn:aws:sns:${pocketVPC.region}:${pocketVPC.accountId}:${config.lambda.snsTopicName.userEvents}`,
         sqsQueue: lambda.sqsQueueResource,
         tags: config.tags,
-        dependsOn: [lambda.sqsQueueResource as sqs.SqsQueue],
+        dependsOn: [lambda.sqsQueueResource as SqsQueue],
       }
     );
 
