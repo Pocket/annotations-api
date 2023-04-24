@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.109",
-    "@types/jest": "27.4.1",
+    "@types/jest": "27.5.2",
     "@types/sinon": "10.0.13",
     "jest": "27.5.1",
     "nock": "13.2.7",
