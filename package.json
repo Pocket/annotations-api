@@ -46,7 +46,7 @@
     "knex": "1.0.7",
     "luxon": "2.4.0",
     "mysql": "2.18.1",
-    "nanoid": "3.3.4"
+    "nanoid": "3.3.6"
   },
   "devDependencies": {
     "@pocket-tools/eslint-config": "2.0.0",
