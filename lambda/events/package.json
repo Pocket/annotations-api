@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-lambda": "3.54.1",
+    "@aws-sdk/client-lambda": "3.352.0",
     "@sentry/serverless": "^6.18.2",
     "@types/node": "14.18.34",
     "aws-lambda": "^1.0.7",
