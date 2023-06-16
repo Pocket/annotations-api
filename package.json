@@ -23,7 +23,7 @@
   "license": "ISC",
   "homepage": "https://github.com/Pocket/annotations-api#readme",
   "dependencies": {
-    "@apollo/server": "4.2.2",
+    "@apollo/server": "4.7.4",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
     "@apollo/subgraph": "2.2.1",
     "@aws-sdk/client-dynamodb": "3.95.0",
