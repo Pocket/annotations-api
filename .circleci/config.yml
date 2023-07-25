@@ -10,7 +10,7 @@ parameters:
 
 orbs:
   pocket: pocket/circleci-orbs@2.1.2
-  aws-cli: circleci/aws-cli@3.1.5
+  aws-cli: circleci/aws-cli@4.0.0
   backstage-entity-validator: roadiehq/backstage-entity-validator@0.4.2
   path-filtering: circleci/path-filtering@0.1.7
   continuation: circleci/continuation@0.3.1
