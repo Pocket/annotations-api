@@ -33,3 +33,5 @@ tmp
 
 # Build files
 dist
+
+logs

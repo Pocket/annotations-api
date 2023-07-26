@@ -140,8 +140,6 @@ jobs:
           password: $DOCKERHUB_PASSWORD
         environment:
           - NODE_ENV=test
-          - AWS_XRAY_LOG_LEVEL=silent
-          - AWS_XRAY_CONTEXT_MISSING=LOG_ERROR
       # Mysql 5.7 service
       - image: mysql:5.7@sha256:bd873931ef20f30a5a9bf71498ce4e02c88cf48b2e8b782c337076d814deebde
         auth:
@@ -201,8 +199,6 @@ jobs:
           password: $DOCKERHUB_PASSWORD
         environment:
           - NODE_ENV=test
-          - AWS_XRAY_LOG_LEVEL=silent
-          - AWS_XRAY_CONTEXT_MISSING=LOG_ERROR
     steps:
       - checkout
       - restore_cache:

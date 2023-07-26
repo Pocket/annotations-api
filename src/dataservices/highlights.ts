@@ -9,6 +9,7 @@ import { UsersMeta } from './usersMeta';
 import { SavedItem } from './savedItem';
 import { failCallback } from '../server/routes/helper';
 import { setTimeout } from 'timers/promises';
+import { serverLogger } from '../server';
 
 export class HighlightsDataService {
   public readonly userId: string;
@@ -266,12 +267,13 @@ export class HighlightsDataService {
           .where('annotation_id', id)
           .andWhere({ user_id: this.userId });
 
-        console.log(
+        serverLogger.info(
           `deleted row from table user_annotations for ` +
             `user: ${this.userId} and annotation_id: ${id}; requestId: ${requestId}`
         );
         await setTimeout(config.batchDelete.deleteDelayInMilliSec);
       } catch (error) {
+        serverLogger.error(error);
         failCallback(
           'batchDelete',
           error,

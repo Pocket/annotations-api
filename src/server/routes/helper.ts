@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/node';
+import { serverLogger } from '../';
 
 export const successCallback = (
   dataType: string,
@@ -6,7 +7,7 @@ export const successCallback = (
   traceId: string
 ) => {
   const successMessage = `BatchDelete: ${dataType} deletion completed for userId=${userId}, traceId=${traceId}`;
-  console.log(successMessage);
+  serverLogger.info(successMessage);
 };
 
 export const failCallback = (
@@ -23,6 +24,6 @@ export const failCallback = (
   }
   Sentry.addBreadcrumb({ message: failMessage });
   Sentry.captureException(error);
-  console.error(failMessage);
-  console.error(error);
+  serverLogger.error(failMessage);
+  serverLogger.error(error);
 };

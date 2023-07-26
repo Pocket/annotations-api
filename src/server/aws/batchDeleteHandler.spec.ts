@@ -5,6 +5,7 @@ import { DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import * as Sentry from '@sentry/node';
 import config from '../../config';
+import { serverLogger } from '../';
 
 describe('batchDeleteHandler', () => {
   const emitter = new EventEmitter();
@@ -16,7 +17,7 @@ describe('batchDeleteHandler', () => {
   };
   let scheduleStub: sinon.SinonStub;
   let sentryStub: sinon.SinonStub;
-  let consoleStub: sinon.SinonStub;
+  let serverLoggerStub: sinon.SinonStub;
 
   beforeEach(() => {
     sinon.restore();
@@ -25,7 +26,7 @@ describe('batchDeleteHandler', () => {
       .resolves();
 
     sentryStub = sinon.stub(Sentry, 'captureException');
-    consoleStub = sinon.stub(console, 'error');
+    serverLoggerStub = sinon.stub(serverLogger, 'error');
   });
 
   it('sends an event when the class is initialized', () => {
@@ -56,7 +57,7 @@ describe('batchDeleteHandler', () => {
         level: Sentry.Severity.Critical,
       })
     ).toBe(true);
-    expect(consoleStub.callCount).toEqual(1);
+    expect(serverLoggerStub.callCount).toEqual(1);
     expect(scheduleStub.calledOnceWithExactly(300000)).toBe(true);
   });
 
@@ -121,7 +122,7 @@ describe('batchDeleteHandler', () => {
           .rejects(error);
         await batchDeleteHandler.handleMessage(fakeMessageBody);
         expect(sentryStub.calledOnceWithExactly(error)).toBe(true);
-        expect(consoleStub.callCount).toEqual(2);
+        expect(serverLoggerStub.callCount).toEqual(2);
       });
     });
   });
