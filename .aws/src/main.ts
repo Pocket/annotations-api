@@ -27,6 +27,7 @@ import {
 } from '@pocket-tools/terraform-modules';
 import { DynamoDB } from './dynamodb';
 import { SqsLambda } from './SqsLambda';
+import { CloudwatchLogGroup } from '@cdktf/provider-aws/lib/cloudwatch-log-group';
 
 class AnnotationsAPI extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -249,6 +250,12 @@ class AnnotationsAPI extends TerraformStack {
               value: process.env.NODE_ENV, // this gives us a nice lowercase production and development
             },
             {
+              name: 'RELEASE_SHA',
+              value:
+                process.env.CODEBUILD_RESOLVED_SOURCE_VERSION ??
+                process.env.CIRCLE_SHA1,
+            },
+            {
               name: 'REDIS_PRIMARY_ENDPOINT',
               value: cache.primaryEndpoint,
             },
@@ -289,6 +296,8 @@ class AnnotationsAPI extends TerraformStack {
               value: `https://sqs.${region.name}.amazonaws.com/${caller.accountId}/${config.envVars.sqsBatchDeleteQueueName}`,
             },
           ],
+          logGroup: this.createCustomLogGroup('app'),
+          logMultilinePattern: '^\\S.+',
           secretEnvVars: [
             {
               name: 'SENTRY_DSN',
@@ -319,18 +328,6 @@ class AnnotationsAPI extends TerraformStack {
               valueFrom: `${databaseSecretsArn}:write_password::`,
             },
           ],
-        },
-        {
-          name: 'xray-daemon',
-          containerImage: 'public.ecr.aws/xray/aws-xray-daemon:latest',
-          portMappings: [
-            {
-              hostPort: 2000,
-              containerPort: 2000,
-              protocol: 'udp',
-            },
-          ],
-          command: ['--region', 'us-east-1', '--local-mode'],
         },
       ],
       codeDeploy: {
@@ -396,17 +393,6 @@ class AnnotationsAPI extends TerraformStack {
             effect: 'Allow',
           },
           {
-            actions: [
-              'xray:PutTraceSegments',
-              'xray:PutTelemetryRecords',
-              'xray:GetSamplingRules',
-              'xray:GetSamplingTargets',
-              'xray:GetSamplingStatisticSummaries',
-            ],
-            resources: ['*'],
-            effect: 'Allow',
-          },
-          {
             //no permission for batchReceive as we want only one message polled at a time
             actions: [
               'sqs:ReceiveMessage',
@@ -440,6 +426,25 @@ class AnnotationsAPI extends TerraformStack {
         },
       },
     });
+  }
+  /**
+   * Create Custom log group for ECS to share across task revisions
+   * @param containerName
+   * @private
+   */
+  private createCustomLogGroup(containerName: string) {
+    const logGroup = new CloudwatchLogGroup(
+      this,
+      `${containerName}-log-group`,
+      {
+        name: `/Backend/${config.prefix}/ecs/${containerName}`,
+        retentionInDays: 90,
+        skipDestroy: true,
+        tags: config.tags,
+      }
+    );
+
+    return logGroup.name;
   }
 }
 
