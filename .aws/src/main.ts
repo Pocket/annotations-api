@@ -20,6 +20,7 @@ import {
   ApplicationRedis,
   ApplicationSQSQueue,
   PocketALBApplication,
+  PocketAwsSyntheticChecks,
   PocketECSCodePipeline,
   PocketPagerDuty,
   PocketVPC,
@@ -80,8 +81,10 @@ class AnnotationsAPI extends TerraformStack {
       maxReceiveCount: 2,
     });
 
+    const annotationsApiPagerduty = this.createPagerDuty();
+
     const pocketApp = this.createPocketAlbApplication({
-      pagerDuty: this.createPagerDuty(),
+      pagerDuty: annotationsApiPagerduty,
       secretsManagerKmsAlias: this.getSecretsManagerKmsAlias(),
       snsTopic: this.getCodeDeploySnsTopic(),
       region,
@@ -91,6 +94,35 @@ class AnnotationsAPI extends TerraformStack {
     });
 
     this.createApplicationCodePipeline(pocketApp);
+
+    const getAnnotationsQuery = `{"query": "query { _entities(representations: { id: \\"1\\", __typename: \\"SavedItem\\" }) { ... on SavedItem { annotations { highlights { id } } } } }"}`;
+
+    new PocketAwsSyntheticChecks(this, 'synthetics', {
+      alarmTopicArn:
+        config.environment === 'Prod'
+          ? annotationsApiPagerduty.snsNonCriticalAlarmTopic.arn
+          : '',
+      environment: config.environment,
+      prefix: config.prefix,
+      query: [
+        {
+          endpoint: config.domain,
+          data: getAnnotationsQuery,
+          jmespath: 'errors[0].message',
+          response: 'You must be logged in to use this service', // temp response until we create canary user to make valid requests
+        },
+      ],
+      securityGroupIds: pocketVPC.defaultSecurityGroups.ids,
+      shortName: config.shortName,
+      subnetIds: pocketVPC.privateSubnetIds,
+      tags: config.tags,
+      uptime: [
+        {
+          response: 'ok',
+          url: `${config.domain}/.well-known/apollo/server-health`,
+        },
+      ],
+    });
   }
 
   /**
