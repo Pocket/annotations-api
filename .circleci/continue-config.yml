@@ -114,8 +114,6 @@ jobs:
           password: $DOCKERHUB_PASSWORD
         environment:
           NODE_ENV: test
-          AWS_XRAY_LOG_LEVEL: silent
-          AWS_XRAY_CONTEXT_MISSING: LOG_ERROR
     steps:
       - checkout
       - restore_cache:

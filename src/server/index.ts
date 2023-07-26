@@ -2,7 +2,6 @@ import * as Sentry from '@sentry/node';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import xrayExpress from 'aws-xray-sdk-express';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { buildSubgraphSchema } from '@apollo/subgraph';
@@ -21,8 +20,8 @@ import { resolvers } from '../resolvers';
 import config from '../config';
 import { getContext, IContext } from '../context';
 import queueDeleteRouter from './routes/queueDelete';
-
-const serviceName = 'annotations-api';
+import { setLogger, setMorgan } from '@pocket-tools/ts-logger';
+export const serverLogger = setLogger();
 
 export async function startServer(port: number): Promise<{
   app: Express.Application;
@@ -44,11 +43,13 @@ export async function startServer(port: number): Promise<{
     res.status(200).send('ok');
   });
 
-  app.use(express.json());
+  app.use(
+    // JSON parser to enable POST body with JSON
+    express.json(),
+    // JSON parser to enable POST body with JSON
+    setMorgan(serverLogger)
+  );
   app.use('/queueDelete', queueDeleteRouter);
-
-  //If there is no host header (really there always should be..) then use parser-wrapper as the name
-  app.use(xrayExpress.openSegment(serviceName));
 
   const basePlugins = [
     sentryPlugin,
@@ -86,9 +87,6 @@ export async function startServer(port: number): Promise<{
       context: getContext,
     })
   );
-
-  //Make sure the express app has the xray close segment handler
-  app.use(xrayExpress.closeSegment());
 
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
   return { app, server, url };

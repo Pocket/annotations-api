@@ -13,6 +13,7 @@ import { readClient, writeClient } from '../../database/client';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import { setTimeout } from 'timers/promises';
 import { failCallback } from '../routes/helper';
+import { serverLogger } from '../';
 
 export type BatchDeleteMessage = {
   traceId: string;
@@ -70,8 +71,8 @@ export class BatchDeleteHandler {
       await this.sqsClient.send(new DeleteMessageCommand(deleteParams));
     } catch (error) {
       const errorMessage = 'Error deleting message from queue ';
-      console.error(errorMessage, error);
-      console.error(JSON.stringify(message));
+      serverLogger.error(errorMessage, error);
+      serverLogger.error(JSON.stringify(message));
       Sentry.addBreadcrumb({ message: errorMessage, data: message });
       Sentry.captureException(error);
     }
@@ -86,7 +87,7 @@ export class BatchDeleteHandler {
    * (underlying call to AccountDeleteDataService completed without error)
    */
   async handleMessage(body: BatchDeleteMessage): Promise<boolean> {
-    console.log(`handling message` + JSON.stringify(body));
+    serverLogger.info(`handling message` + JSON.stringify(body));
     const traceId = body.traceId ?? nanoid();
     const userId = body.userId.toString();
     try {
@@ -127,7 +128,7 @@ export class BatchDeleteHandler {
    * to minimize database load.
    */
   async pollQueue() {
-    console.log('emitter on');
+    serverLogger.info('emitter on');
     const params = {
       AttributeNames: ['SentTimestamp'],
       MaxNumberOfMessages: config.aws.sqs.annotationsDeleteQueue.maxMessages,
@@ -141,16 +142,16 @@ export class BatchDeleteHandler {
     let data: ReceiveMessageCommandOutput;
     let body: BatchDeleteMessage;
 
-    console.log('fetching messages from the sqs queue');
+    serverLogger.info('fetching messages from the sqs queue');
     try {
       data = await this.sqsClient.send(new ReceiveMessageCommand(params));
       if (data.Messages && data.Messages.length > 0) {
         body = JSON.parse(data.Messages[0].Body);
-        console.log('fetched message ->' + JSON.stringify(body));
+        serverLogger.info('fetched message ->' + JSON.stringify(body));
       }
     } catch (error) {
       const receiveError = 'Error receiving messages from queue';
-      console.error(receiveError, error);
+      serverLogger.error(receiveError, error);
       Sentry.addBreadcrumb({ message: receiveError });
       Sentry.captureException(error, { level: Sentry.Severity.Critical });
     }

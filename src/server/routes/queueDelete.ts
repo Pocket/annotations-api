@@ -14,6 +14,7 @@ import { validate } from './validator';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import { NotesDataService } from '../../dataservices/notes';
 import { failCallback, successCallback } from './helper';
+import { serverLogger } from '../';
 
 export type SqsMessage = {
   userId: number;
@@ -144,7 +145,7 @@ export async function enqueueAnnotationIds(
         )})`;
         Sentry.addBreadcrumb({ message });
         Sentry.captureException(err);
-        console.log(message);
+        serverLogger.error(message);
       });
     })
   );
