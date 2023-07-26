@@ -40,6 +40,7 @@ export class SqsLambda extends Resource {
         environment: {
           SENTRY_DSN: `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}/SENTRY_DSN`,
           GIT_SHA: `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}/SERVICE_HASH`,
+          RELEASE_SHA: `arn:aws:ssm:${region.name}:${caller.accountId}:parameter/${config.name}/${config.environment}/SERVICE_HASH`,
           ENVIRONMENT:
             config.environment === 'Prod' ? 'production' : 'development',
           ANNOTATIONS_API_URI:
@@ -54,19 +55,6 @@ export class SqsLambda extends Resource {
         codeDeploy: {
           region: vpc.region,
           accountId: vpc.accountId,
-        },
-        alarms: {
-          // TODO: set proper alarm values, check dev
-          /*
-          errors: {
-            evaluationPeriods: 3,
-            period: 3600, // 1 hour
-            threshold: 20,
-            actions: config.isDev
-              ? []
-              : [pagerDuty!.snsNonCriticalAlarmTopic.arn],
-          },
-          */
         },
       },
       tags: config.tags,
