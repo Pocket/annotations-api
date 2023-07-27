@@ -107,9 +107,10 @@ class AnnotationsAPI extends TerraformStack {
       query: [
         {
           endpoint: config.domain,
+          userId: '1',
           data: getAnnotationsQuery,
-          jmespath: 'errors[0].message',
-          response: 'You must be logged in to use this service', // temp response until we create canary user to make valid requests
+          jmespath: 'data._entities[0].annotations.highlights',
+          response: 'test', // temp response until we create canary user to make valid requests
         },
       ],
       securityGroupIds: pocketVPC.defaultSecurityGroups.ids,
