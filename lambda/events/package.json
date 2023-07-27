@@ -16,7 +16,7 @@
     "@types/node": "18.17.1",
     "aws-lambda": "^1.0.7",
     "typescript": "5.1.6",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^3.0.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.119",
