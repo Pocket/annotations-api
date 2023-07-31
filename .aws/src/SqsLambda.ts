@@ -19,7 +19,7 @@ export class SqsLambda extends Resource {
     vpc: PocketVPC,
     region: DataAwsRegion,
     caller: DataAwsCallerIdentity,
-    pagerDuty?: PocketPagerDuty
+    pagerDuty?: PocketPagerDuty,
   ) {
     super(scope, name);
 

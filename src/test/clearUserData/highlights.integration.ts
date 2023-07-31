@@ -16,10 +16,10 @@ describe('clearUserData for Highlights data', () => {
     batchDeleteDelay = config.batchDelete.deleteDelayInMilliSec;
     config.batchDelete.deleteDelayInMilliSec = 1;
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
   });
 
@@ -36,7 +36,7 @@ describe('clearUserData for Highlights data', () => {
     });
     await highlightService.deleteByAnnotationIds(
       ['1', '2', '3', '4'],
-      'requestId'
+      'requestId',
     );
     const res = await db('user_annotations')
       .select()
@@ -59,7 +59,7 @@ describe('clearUserData for Highlights data', () => {
       .pluck('user_id');
     await highlightService.deleteByAnnotationIds(
       ['1', '2', '3', '4'],
-      'requestId'
+      'requestId',
     );
     expect(res.length).toEqual(0);
   });

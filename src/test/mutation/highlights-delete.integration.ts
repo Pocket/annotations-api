@@ -23,10 +23,10 @@ describe('Highlights deletion', () => {
   const testData = seedData(now);
   const truncateAndSeed = async () => {
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
   };
 
@@ -69,10 +69,10 @@ describe('Highlights deletion', () => {
     expect(res.body.data?.deleteSavedItemHighlight).toBe(variables.id);
     expect(annotationRecord[0].status).toBe(0);
     expect(usersMetaRecord[0]).toEqual(
-      mysqlTimeString(updateDate, config.database.tz)
+      mysqlTimeString(updateDate, config.database.tz),
     );
     expect(mysqlTimeString(listRecord[0])).toEqual(
-      mysqlTimeString(updateDate, config.database.tz)
+      mysqlTimeString(updateDate, config.database.tz),
     );
 
     clock.restore();
@@ -88,7 +88,7 @@ describe('Highlights deletion', () => {
 
     if (res.body.errors) {
       expect(res.body.errors[0].message).toBe(
-        'Error - Not Found: No annotation found for the given ID'
+        'Error - Not Found: No annotation found for the given ID',
       );
     }
   });

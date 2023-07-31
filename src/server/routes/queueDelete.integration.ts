@@ -59,7 +59,7 @@ describe('/queueDelete', () => {
       sqsSendMock?.restore();
     });
     beforeEach(
-      () => (sqsSendMock = sinon.stub(SQS.prototype, 'send').resolves())
+      () => (sqsSendMock = sinon.stub(SQS.prototype, 'send').resolves()),
     );
     afterEach(() => sqsSendMock.restore());
     it('sends batches of messages to sqs', async () => {
@@ -86,17 +86,17 @@ describe('/queueDelete', () => {
       await enqueueAnnotationIds(
         data as SqsMessage,
         highlightsDataService,
-        '123'
+        '123',
       );
 
       expect(sqsSendMock.callCount).to.equal(2);
       // No exceptions
       expect(sentrySpy.callCount).to.equal(0);
       const firstMessage = JSON.parse(
-        sqsSendMock.getCall(0).args[0].input.Entries[0].MessageBody
+        sqsSendMock.getCall(0).args[0].input.Entries[0].MessageBody,
       );
       const secondMessage = JSON.parse(
-        sqsSendMock.getCall(1).args[0].input.Entries[0].MessageBody
+        sqsSendMock.getCall(1).args[0].input.Entries[0].MessageBody,
       );
       expect(firstMessage).to.shallowDeepEqual({
         ...data,
@@ -149,7 +149,7 @@ describe('/queueDelete', () => {
       await enqueueAnnotationIds(
         data as SqsMessage,
         highlightsDataService,
-        '123'
+        '123',
       );
 
       // Two calls made

@@ -26,10 +26,10 @@ describe('Highlights creation', () => {
   const testData = seedData(now);
   const truncateAndSeed = async () => {
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
   };
   beforeAll(async () => {
@@ -130,10 +130,10 @@ describe('Highlights creation', () => {
         .pluck('time_updated');
 
       expect(mysqlTimeString(listRecord[0])).toEqual(
-        mysqlTimeString(updateDate, config.database.tz)
+        mysqlTimeString(updateDate, config.database.tz),
       );
       expect(usersMetaRecord[0]).toEqual(
-        mysqlTimeString(updateDate, config.database.tz)
+        mysqlTimeString(updateDate, config.database.tz),
       );
 
       clock.restore();
@@ -378,7 +378,7 @@ describe('Highlights creation', () => {
         const expectedQuotes = variables.input.map((_) => _.quote);
         const actualQuotes = result.map((_) => _.quote);
         expect(actualQuotes).toEqual(expect.arrayContaining(expectedQuotes));
-      }
+      },
     );
   });
 });

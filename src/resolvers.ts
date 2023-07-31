@@ -13,10 +13,10 @@ export const resolvers = {
     annotations: async (
       parent: SavedItem,
       _,
-      context: IContext
+      context: IContext,
     ): Promise<SavedItemAnnotations> => {
       const highlights = await new HighlightsDataService(context).getByItemId(
-        parent.id
+        parent.id,
       );
       return { highlights };
     },
@@ -25,7 +25,7 @@ export const resolvers = {
     note: async (
       parent: Highlight,
       _,
-      context: IContext
+      context: IContext,
     ): Promise<HighlightNote | undefined> => {
       return context.dataLoaders.noteByHighlightId.load(parent.id);
     },
@@ -34,17 +34,23 @@ export const resolvers = {
     createSavedItemHighlights: async (
       _,
       args: { input: HighlightInput[] },
-      context: IContext
+      context: IContext,
     ): Promise<Highlight[]> => {
       const highlights = await new HighlightsDataService(context).create(
-        args.input
+        args.input,
       );
-      const noteData = args.input.reduce((result, highlightInput, index) => {
-        if (highlightInput.note) {
-          result.push({ id: highlights[index].id, text: highlightInput.note });
-        }
-        return result;
-      }, [] as { id: string; text: string }[]);
+      const noteData = args.input.reduce(
+        (result, highlightInput, index) => {
+          if (highlightInput.note) {
+            result.push({
+              id: highlights[index].id,
+              text: highlightInput.note,
+            });
+          }
+          return result;
+        },
+        [] as { id: string; text: string }[],
+      );
       let notes: HighlightNote[];
       if (noteData.length > 0) {
         notes = await context.notesService.batchCreate(noteData);
@@ -59,7 +65,7 @@ export const resolvers = {
     updateSavedItemHighlight: async (
       _: any,
       params: { id: string; input: HighlightInput },
-      context: IContext
+      context: IContext,
     ): Promise<Highlight> => {
       const dataService = new HighlightsDataService(context);
       await dataService.update(params.id, params.input);
@@ -68,17 +74,17 @@ export const resolvers = {
     deleteSavedItemHighlight: async (
       _,
       args,
-      context: IContext
+      context: IContext,
     ): Promise<string> => {
       const highlightId = await new HighlightsDataService(context).delete(
-        args.id
+        args.id,
       );
       return highlightId;
     },
     createSavedItemHighlightNote: async (
       _,
       args: { id: string; input: string },
-      context: IContext
+      context: IContext,
     ): Promise<HighlightNote> => {
       const dataService = new HighlightsDataService(context);
       await dataService.getById(args.id);
@@ -87,7 +93,7 @@ export const resolvers = {
     updateSavedItemHighlightNote: async (
       _,
       args: { id: string; input: string },
-      context: IContext
+      context: IContext,
     ): Promise<HighlightNote> => {
       const dataService = new HighlightsDataService(context);
       await dataService.getById(args.id);
@@ -96,7 +102,7 @@ export const resolvers = {
     deleteSavedItemHighlightNote: async (
       _,
       args,
-      context: IContext
+      context: IContext,
     ): Promise<string> => {
       const dataService = await new HighlightsDataService(context);
       await dataService.delete(args.id);

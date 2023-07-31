@@ -4,7 +4,7 @@ import { serverLogger } from '../';
 export const successCallback = (
   dataType: string,
   userId: string,
-  traceId: string
+  traceId: string,
 ) => {
   const successMessage = `BatchDelete: ${dataType} deletion completed for userId=${userId}, traceId=${traceId}`;
   serverLogger.info(successMessage);
@@ -16,7 +16,7 @@ export const failCallback = (
   dataType: string,
   userId: string,
   traceId: string,
-  annotationId?: string
+  annotationId?: string,
 ) => {
   let failMessage = `${module}: Error = Failed to delete ${dataType} for userId=${userId}, traceId=${traceId}`;
   if (annotationId) {

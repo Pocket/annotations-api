@@ -19,10 +19,10 @@ describe('Notes creation', () => {
   const testData = seedData(now);
   const truncateAndSeed = async () => {
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
   };
   beforeAll(async () => {
@@ -84,7 +84,7 @@ describe('Notes creation', () => {
       expect(res.body.data?.createSavedItemHighlightNote).toBeNull();
       expect(res.body.errors?.length).toEqual(1);
       expect(res.body.errors?.[0].message).toContain(
-        'Premium account required'
+        'Premium account required',
       );
     });
   });

@@ -16,7 +16,7 @@ export async function processor(event: SQSEvent): Promise<SQSBatchResponse> {
       const message = JSON.parse(JSON.parse(record.body).Message);
       if (handlers[message['detail-type']] == null) {
         throw new Error(
-          `Unable to retrieve handler for detail-type='${message['detail-type']}'`
+          `Unable to retrieve handler for detail-type='${message['detail-type']}'`,
         );
       }
       await handlers[message['detail-type']](record);

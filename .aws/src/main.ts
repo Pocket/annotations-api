@@ -57,7 +57,7 @@ class AnnotationsAPI extends TerraformStack {
       'sqs-event-consumer',
       pocketVPC,
       region,
-      caller
+      caller,
     );
 
     const lambda = sqsLambda.lambda;
@@ -71,7 +71,7 @@ class AnnotationsAPI extends TerraformStack {
         sqsQueue: lambda.sqsQueueResource,
         tags: config.tags,
         dependsOn: [lambda.sqsQueueResource as SqsQueue],
-      }
+      },
     );
 
     new ApplicationSQSQueue(this, 'batch-delete-consumer-queue', {
@@ -132,7 +132,7 @@ class AnnotationsAPI extends TerraformStack {
    */
   private static createElasticache(
     scope: Construct,
-    vpc: PocketVPC
+    vpc: PocketVPC,
   ): {
     primaryEndpoint: string;
     readerEndpoint: string;
@@ -216,7 +216,7 @@ class AnnotationsAPI extends TerraformStack {
         workspaces: {
           name: 'incident-management',
         },
-      }
+      },
     );
 
     return new PocketPagerDuty(this, 'pagerduty', {
@@ -473,7 +473,7 @@ class AnnotationsAPI extends TerraformStack {
         retentionInDays: 90,
         skipDestroy: true,
         tags: config.tags,
-      }
+      },
     );
 
     return logGroup.name;

@@ -47,7 +47,7 @@ describe('event handlers', () => {
       expect(res.batchItemFailures).toEqual([{ itemIdentifier: 'abc' }]);
       expect(sentryStub.callCount).toEqual(1);
       expect(sentryStub.getCall(0).args[0].message).toEqual(
-        `Unable to retrieve handler for detail-type='NOT_A_TYPE'`
+        `Unable to retrieve handler for detail-type='NOT_A_TYPE'`,
       );
     });
   });
