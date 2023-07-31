@@ -35,7 +35,7 @@ export class ContextManager implements IContext {
       request: express.Request;
       db: { readClient: Knex; writeClient: Knex };
       dynamoClient: DynamoDBClient;
-    }
+    },
   ) {
     this.db = config.db;
     this.config = config;
@@ -55,7 +55,7 @@ export class ContextManager implements IContext {
 
     if (!userId) {
       throw new AuthenticationError(
-        'You must be logged in to use this service'
+        'You must be logged in to use this service',
       );
     }
 
@@ -71,7 +71,7 @@ export class ContextManager implements IContext {
   get notesService(): NotesDataService {
     if (!this.isPremium) {
       throw new ForbiddenError(
-        'Premium account required to access this feature'
+        'Premium account required to access this feature',
       );
     }
     return new NotesDataService(this.dynamoClient, this.userId);

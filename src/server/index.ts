@@ -6,7 +6,6 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { errorHandler, sentryPlugin } from '@pocket-tools/apollo-utils';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
 import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginInlineTraceDisabled,
@@ -14,6 +13,7 @@ import {
 } from '@apollo/server/plugin/disabled';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 import typeDefs from '../typeDefs';
 import { resolvers } from '../resolvers';
@@ -47,7 +47,7 @@ export async function startServer(port: number): Promise<{
     // JSON parser to enable POST body with JSON
     express.json(),
     // JSON parser to enable POST body with JSON
-    setMorgan(serverLogger)
+    setMorgan(serverLogger),
   );
   app.use('/queueDelete', queueDeleteRouter);
 
@@ -60,7 +60,7 @@ export async function startServer(port: number): Promise<{
     ApolloServerPluginInlineTrace(),
   ];
   const nonProdPlugins = [
-    ApolloServerPluginLandingPageGraphQLPlayground(),
+    ApolloServerPluginLandingPageLocalDefault(),
     ApolloServerPluginInlineTraceDisabled(),
     ApolloServerPluginUsageReportingDisabled(),
   ];
@@ -85,7 +85,7 @@ export async function startServer(port: number): Promise<{
     cors<cors.CorsRequest>(),
     expressMiddleware<IContext>(server, {
       context: getContext,
-    })
+    }),
   );
 
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));

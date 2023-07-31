@@ -30,10 +30,10 @@ describe('Notes delete', () => {
   beforeAll(async () => {
     ({ app, server, url: graphQLUrl } = await startServer(0));
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
     await dynamodb.send(noteSeedCommand(now));
   });
@@ -90,7 +90,7 @@ describe('Notes delete', () => {
       expect(res.body.data).toBeNull();
       expect(res.body.errors?.length).toEqual(1);
       expect(res.body.errors?.[0].message).toContain(
-        'Premium account required'
+        'Premium account required',
       );
     });
   });

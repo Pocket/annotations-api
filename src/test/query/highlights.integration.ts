@@ -18,10 +18,10 @@ describe('Highlights on a SavedItem', () => {
 
   beforeAll(async () => {
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
     ({ app, server, url: graphQLUrl } = await startServer(0));
   });
@@ -63,7 +63,7 @@ describe('Highlights on a SavedItem', () => {
     expect(res).toBeTruthy();
     expect(annotations).toHaveLength(2);
     expect(annotations.map((_) => _.quote)).toEqual(
-      expect.arrayContaining(expectedQuotes)
+      expect.arrayContaining(expectedQuotes),
     );
   });
   it('should return an empty Highlights array if there are no highlights on a SavedItem', async () => {

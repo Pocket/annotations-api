@@ -29,13 +29,13 @@ export class UsersMeta {
    */
   public async logAnnotationMutation(
     timestamp: Date,
-    trx: Knex.Transaction
+    trx: Knex.Transaction,
   ): Promise<void> {
     const propertyCode = UsersMeta.propertiesMap.account;
     // The table should be unique on property:user_id for annotations log
     await this.deleteByProperty(propertyCode).transacting(trx);
     await this.insertTimestampByProperty(propertyCode, timestamp).transacting(
-      trx
+      trx,
     );
   }
 
@@ -55,7 +55,7 @@ export class UsersMeta {
    */
   private insertTimestampByProperty(
     property: number,
-    timestamp: Date
+    timestamp: Date,
   ): Knex.QueryBuilder {
     return this.db.insert({
       user_id: this.userId,

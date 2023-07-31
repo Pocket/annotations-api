@@ -21,7 +21,7 @@ export class SavedItem {
   public async markUpdate(
     itemId: string,
     date: Date,
-    trx: Knex.Transaction
+    trx: Knex.Transaction,
   ): Promise<void> {
     await trx('list')
       .update({

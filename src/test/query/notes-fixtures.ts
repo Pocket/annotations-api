@@ -38,7 +38,7 @@ export const noteSeedCommand = (now: Date): PutCommand => {
 
 export function* batchWriteMockNotes(
   count: number,
-  userId: string
+  userId: string,
 ): Generator<BatchWriteCommandInput> {
   const chance = new Chance();
   const batchSize = 25;

@@ -17,16 +17,19 @@ interface NumericObject {
  */
 export function groupByCount<T extends IndexableObject, Key extends keyof T>(
   data: T[],
-  key: Key
+  key: Key,
 ): Record<T[Key], number> {
-  return data.reduce((counts, element) => {
-    if (key in element) {
-      counts[element[key]] != null
-        ? (counts[element[key]] += 1)
-        : (counts[element[key]] = 1);
-    }
-    return counts;
-  }, {} as Record<T[Key], number>);
+  return data.reduce(
+    (counts, element) => {
+      if (key in element) {
+        counts[element[key]] != null
+          ? (counts[element[key]] += 1)
+          : (counts[element[key]] = 1);
+      }
+      return counts;
+    },
+    {} as Record<T[Key], number>,
+  );
 }
 
 /**
@@ -39,7 +42,7 @@ export function groupByCount<T extends IndexableObject, Key extends keyof T>(
  */
 export function sumByKey<T extends NumericObject, Key extends keyof T>(
   base: T | undefined,
-  addition: T | undefined
+  addition: T | undefined,
 ): Record<T[Key], number> {
   if (addition == null) {
     return { ...base };
@@ -49,6 +52,6 @@ export function sumByKey<T extends NumericObject, Key extends keyof T>(
       total[key] != null ? (total[key] += value) : (total[key] = value);
       return total;
     },
-    { ...base } as Record<T[Key], number>
+    { ...base } as Record<T[Key], number>,
   );
 }

@@ -22,10 +22,10 @@ describe('Highlights update', () => {
   const testData = seedData(now);
   const truncateAndSeed = async () => {
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
   };
   beforeAll(async () => {
@@ -70,14 +70,14 @@ describe('Highlights update', () => {
     expect(res.body.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
     expect(res.body.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
     expect(res.body.data?.updateSavedItemHighlight.version).toEqual(
-      input.version
+      input.version,
     );
     expect(res.body.data?.updateSavedItemHighlight.id).toEqual(id);
     expect(usersMetaRecord[0]).toEqual(
-      mysqlTimeString(updateDate, config.database.tz)
+      mysqlTimeString(updateDate, config.database.tz),
     );
     expect(mysqlTimeString(listRecord[0])).toEqual(
-      mysqlTimeString(updateDate, config.database.tz)
+      mysqlTimeString(updateDate, config.database.tz),
     );
 
     clock.restore();
@@ -97,7 +97,7 @@ describe('Highlights update', () => {
       .set(headers)
       .send({ query: print(UPDATE_HIGHLIGHT), variables });
     expect(res.body.errors?.[0]?.message).toContain(
-      'Error - Not Found: No annotation found for the given ID'
+      'Error - Not Found: No annotation found for the given ID',
     );
 
     expect(res.body.errors?.[0]?.extensions?.code).toEqual('NOT_FOUND');
@@ -133,7 +133,7 @@ describe('Highlights update', () => {
 
     expect(dbRow.length).toEqual(1);
     expect(res.body.errors?.[0].message).toContain(
-      'Error - Not Found: No annotation found for the given ID'
+      'Error - Not Found: No annotation found for the given ID',
     );
   });
 });

@@ -58,7 +58,7 @@ router.post(
       .clearUserData()
       .then(() => successCallback('Notes', userId, requestId))
       .catch((error) =>
-        failCallback('queueDelete', error, 'Notes', userId, requestId)
+        failCallback('queueDelete', error, 'Notes', userId, requestId),
       );
 
     const highlightDataService = new HighlightsDataService({
@@ -77,7 +77,7 @@ router.post(
       status: 'OK',
       message: `QueueDelete: Enqueued items for User ID: ${req.body.userId} (requestId='${requestId}')`,
     });
-  }
+  },
 );
 
 /**
@@ -93,7 +93,7 @@ router.post(
 export async function enqueueAnnotationIds(
   data: Omit<SqsMessage, 'annotationIds'>,
   highlightDataService: HighlightsDataService,
-  requestId: string
+  requestId: string,
 ): Promise<void> {
   const { userId, email, isPremium } = data;
   const limit = config.queueDelete.queryLimit;
@@ -117,7 +117,7 @@ export async function enqueueAnnotationIds(
           isPremium,
           annotationIds: nextChunk.value,
           traceId: nanoid(),
-        })
+        }),
       );
 
       if (sqsEntries.length === config.aws.sqs.batchSize) {
@@ -141,13 +141,13 @@ export async function enqueueAnnotationIds(
       // Handle logging individual errors as the promises are resolved
       return sqs.send(command).catch((err) => {
         const message = `QueueDelete: Error - Failed to enqueue annotationIds for userId: ${userId} (command=\n${JSON.stringify(
-          command
+          command,
         )})`;
         Sentry.addBreadcrumb({ message });
         Sentry.captureException(err);
         serverLogger.error(message);
       });
-    })
+    }),
   );
 }
 
@@ -157,7 +157,7 @@ export async function enqueueAnnotationIds(
  * @param entries
  */
 function buildSqsCommand(
-  entries: SendMessageBatchRequestEntry[]
+  entries: SendMessageBatchRequestEntry[],
 ): SendMessageBatchCommand {
   const command = new SendMessageBatchCommand({
     Entries: entries,

@@ -41,7 +41,10 @@ export class BatchDeleteHandler {
    * @param pollOnInit whether to start polling when the class is
    * instantiated, primarily for testing (default=true);
    */
-  constructor(public readonly emitter: EventEmitter, pollOnInit = true) {
+  constructor(
+    public readonly emitter: EventEmitter,
+    pollOnInit = true,
+  ) {
     this.sqsClient = new SQSClient({
       region: config.aws.region,
       endpoint: config.aws.endpoint,
@@ -49,7 +52,7 @@ export class BatchDeleteHandler {
     });
     emitter.on(
       BatchDeleteHandler.eventName,
-      async () => await this.pollQueue()
+      async () => await this.pollQueue(),
     );
     // Start the polling by emitting an initial event
     if (pollOnInit) {
@@ -164,12 +167,12 @@ export class BatchDeleteHandler {
       // Schedule next message poll
       await this.scheduleNextPoll(
         config.aws.sqs.annotationsDeleteQueue.afterMessagePollIntervalSeconds *
-          1000
+          1000,
       );
     } else {
       // If no messages were found, schedule another poll after a short time
       await this.scheduleNextPoll(
-        config.aws.sqs.annotationsDeleteQueue.defaultPollIntervalSeconds * 1000
+        config.aws.sqs.annotationsDeleteQueue.defaultPollIntervalSeconds * 1000,
       );
     }
   }

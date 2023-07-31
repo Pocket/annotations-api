@@ -28,7 +28,10 @@ export class NotesDataService {
   public dynamo: DynamoDBDocumentClient;
   private table = config.dynamoDb.notesTable;
 
-  constructor(private client: DynamoDBClient, private userId: string) {
+  constructor(
+    private client: DynamoDBClient,
+    private userId: string,
+  ) {
     const dynamoClientConfig: DynamoDBClientConfig = {
       region: config.aws.region,
     };
@@ -113,11 +116,11 @@ export class NotesDataService {
         await backoff(tries, config.aws.maxBackoff);
       }
       const response: BatchGetCommandOutput = await this.dynamo.send(
-        batchItemCommand
+        batchItemCommand,
       );
       if (response.Responses) {
         itemResults.push(
-          ...(response.Responses?.[this.table.name] as HighlightNoteEntity[])
+          ...(response.Responses?.[this.table.name] as HighlightNoteEntity[]),
         );
       }
       // Increment tries for backoff, and reset unprocessed key list
@@ -147,7 +150,7 @@ export class NotesDataService {
       return this.toGraphQl(noteEntity as HighlightNoteEntity);
     }
     throw new Error(
-      `Unable to create highlight note (dynamoDB request ID = ${response?.$metadata.requestId}`
+      `Unable to create highlight note (dynamoDB request ID = ${response?.$metadata.requestId}`,
     );
   }
 
@@ -197,7 +200,7 @@ export class NotesDataService {
         await backoff(tries, config.aws.maxBackoff);
       }
       const response: BatchWriteCommandOutput = await this.dynamo.send(
-        batchWriteCommand
+        batchWriteCommand,
       );
       // Increment tries for backoff, and reset unprocessed writes list
       tries += 1;
@@ -219,7 +222,7 @@ export class NotesDataService {
    * @returns Array of notes corresponding to GraphQL object
    */
   public async batchCreate(
-    notes: { id: string; text: string }[]
+    notes: { id: string; text: string }[],
   ): Promise<HighlightNote[]> {
     const noteEntities = notes.map((note) => this.toEntity(note.id, note.text));
     const notePutRequests = noteEntities.map((note) => {
@@ -243,7 +246,7 @@ export class NotesDataService {
     });
 
     const response: DeleteCommandOutput = await this.dynamo.send(
-      deleteItemCommand
+      deleteItemCommand,
     );
     if (response.Attributes == null) {
       throw new NotFoundError('Note does not exist on highlight');
@@ -277,7 +280,7 @@ export class NotesDataService {
     // more values to query for
     while (lastEvaluatedKey != null) {
       const highlightResult: QueryCommandOutput = await this.client.send(
-        new QueryCommand(queryCommandInput)
+        new QueryCommand(queryCommandInput),
       );
       if (highlightResult.Items?.length > 0) {
         const deleteRequests = highlightResult.Items.map((res) => ({

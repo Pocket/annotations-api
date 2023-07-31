@@ -55,7 +55,7 @@ describe('batchDeleteHandler', () => {
     expect(
       sentryStub.calledOnceWithExactly(error, {
         level: Sentry.Severity.Critical,
-      })
+      }),
     ).toBe(true);
     expect(serverLoggerStub.callCount).toEqual(1);
     expect(scheduleStub.calledOnceWithExactly(300000)).toBe(true);
@@ -72,7 +72,10 @@ describe('batchDeleteHandler', () => {
           .resolves({ Messages: [{ Body: JSON.stringify(fakeMessageBody) }] });
         await batchDeleteHandler.pollQueue();
         expect(
-          deleteStub.calledOnceWithExactly(['1', '2', '3', '4', '5'], 'abc-123')
+          deleteStub.calledOnceWithExactly(
+            ['1', '2', '3', '4', '5'],
+            'abc-123',
+          ),
         ).toBe(true);
       });
       it('schedules polling another message after a delay', async () => {
@@ -98,7 +101,7 @@ describe('batchDeleteHandler', () => {
           new DeleteMessageCommand({
             QueueUrl: config.aws.sqs.annotationsDeleteQueue.url,
             ReceiptHandle: undefined,
-          }).input
+          }).input,
         );
       });
       it('does not delete if message was unsuccessfully processed', async () => {

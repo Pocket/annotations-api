@@ -14,7 +14,7 @@ describe('dataloaders', () => {
     it('reorders data by highlightId', () => {
       const result = orderAndMapNotes(
         ['hij', 'def', 'abc', 'hij'],
-        mockNotesResponse
+        mockNotesResponse,
       );
       const expected = [
         { highlightId: 'hij', text: 'yummy', _createdAt: 1, _updatedAt: 1 },

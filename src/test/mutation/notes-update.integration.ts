@@ -31,10 +31,10 @@ describe('Notes update', () => {
   beforeAll(async () => {
     ({ app, server, url: graphQLUrl } = await startServer(0));
     await Promise.all(
-      Object.keys(testData).map((table) => db(table).truncate())
+      Object.keys(testData).map((table) => db(table).truncate()),
     );
     await Promise.all(
-      Object.entries(testData).map(([table, data]) => db(table).insert(data))
+      Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
     await dynamodb.send(noteSeedCommand(now));
   });
@@ -75,7 +75,7 @@ describe('Notes update', () => {
       expect(result).toEqual(expect.objectContaining(expectedHighlight));
       const dbRecord = await new NotesDataService(dynamoClient(), '1').get('1');
       expect(dbRecord?.text).toEqual(
-        'sweeter than a bucket full of strawberries'
+        'sweeter than a bucket full of strawberries',
       );
     });
     it('returns NOT_FOUND if the highlight does not exist', async () => {
@@ -108,7 +108,7 @@ describe('Notes update', () => {
       expect(res.body.data?.updateSavedItemHighlightNote).toBeNull();
       expect(res.body.errors?.length).toEqual(1);
       expect(res.body.errors?.[0].message).toContain(
-        'Premium account required'
+        'Premium account required',
       );
     });
   });

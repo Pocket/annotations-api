@@ -19,7 +19,7 @@ export class HighlightsDataService {
   private readonly savedItemService: SavedItem;
 
   constructor(
-    private context: Pick<IContext, 'db' | 'userId' | 'isPremium' | 'apiId'>
+    private context: Pick<IContext, 'db' | 'userId' | 'isPremium' | 'apiId'>,
   ) {
     this.userId = context.userId;
     this.readDb = context.db.readClient;
@@ -43,7 +43,7 @@ export class HighlightsDataService {
   }
 
   private async highlightsCountByItemIds(
-    itemIds: number[]
+    itemIds: number[],
   ): Promise<{ [itemId: string]: number }> {
     const result = await this.readDb<HighlightEntity>('user_annotations')
       .select('item_id')
@@ -96,11 +96,11 @@ export class HighlightsDataService {
     // Add the two counts together to get the desired totals
     const totalDesiredCounts = sumByKey(currentCounts, additionalCounts);
     const exceedsLimit = Object.entries(totalDesiredCounts).find(
-      ([_, count]) => count > config.basicHighlightLimit
+      ([_, count]) => count > config.basicHighlightLimit,
     );
     if (exceedsLimit != null) {
       throw new UserInputError(
-        `Too many highlights for itemId: ${exceedsLimit[0]}`
+        `Too many highlights for itemId: ${exceedsLimit[0]}`,
       );
     }
   }
@@ -126,14 +126,14 @@ export class HighlightsDataService {
     }
 
     const formattedHighlights = highlightInput.map((highlight) =>
-      this.toDbEntity(highlight)
+      this.toDbEntity(highlight),
     );
 
     const rows = await this.writeDb.transaction(
       async (trx: Knex.Transaction) => {
         // Insert into the db
         await trx<HighlightEntity>('user_annotations').insert(
-          formattedHighlights
+          formattedHighlights,
         );
 
         const updateDate = new Date();
@@ -144,9 +144,9 @@ export class HighlightsDataService {
             await this.savedItemService.markUpdate(
               input.itemId,
               updateDate,
-              trx
+              trx,
             );
-          })
+          }),
         );
         // Update users_meta table
         await this.usersMetaService.logAnnotationMutation(updateDate, trx);
@@ -156,9 +156,9 @@ export class HighlightsDataService {
           .select()
           .whereIn(
             'annotation_id',
-            formattedHighlights.map((highlight) => highlight.annotation_id)
+            formattedHighlights.map((highlight) => highlight.annotation_id),
           );
-      }
+      },
     );
 
     return rows.map(this.toGraphql);
@@ -240,7 +240,7 @@ export class HighlightsDataService {
       await this.savedItemService.markUpdate(
         annotation.item_id.toString(),
         updateDate,
-        trx
+        trx,
       );
       // Update users_meta table
       await this.usersMetaService.logAnnotationMutation(updateDate, trx);
@@ -258,7 +258,7 @@ export class HighlightsDataService {
    */
   public async deleteByAnnotationIds(
     annotationIds: string[],
-    requestId: string
+    requestId: string,
   ) {
     for (const id of annotationIds) {
       try {
@@ -269,7 +269,7 @@ export class HighlightsDataService {
 
         serverLogger.info(
           `deleted row from table user_annotations for ` +
-            `user: ${this.userId} and annotation_id: ${id}; requestId: ${requestId}`
+            `user: ${this.userId} and annotation_id: ${id}; requestId: ${requestId}`,
         );
         await setTimeout(config.batchDelete.deleteDelayInMilliSec);
       } catch (error) {
@@ -280,7 +280,7 @@ export class HighlightsDataService {
           'Annotations',
           this.userId,
           requestId,
-          id
+          id,
         );
       }
     }
@@ -317,7 +317,7 @@ export class HighlightsDataService {
    */
   private toDbEntity(
     input: HighlightInput,
-    id?: string
+    id?: string,
   ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
     return {
       annotation_id: id ?? uuid(),
