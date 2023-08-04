@@ -14,6 +14,7 @@ orbs:
   backstage-entity-validator: roadiehq/backstage-entity-validator@0.4.2
   path-filtering: circleci/path-filtering@1.0.0
   continuation: circleci/continuation@1.0.0
+  slack: circleci/slack@4.12.5
 
 # Workflow shortcuts
 # You can remove unnecessary shortcuts as applicable
@@ -54,6 +55,13 @@ only_dev: &only_dev
     branches:
       only:
         - dev
+# Use for notifying failure of step
+slack-fail-post-step: &slack-fail-post-step
+  post-steps:
+    - slack/notify:
+        branch_pattern: main
+        event: fail
+        template: basic_fail_1
 
 jobs:
   apollo:
@@ -248,10 +256,15 @@ workflows:
           context: pocket
           name: test_integrations
 
-      - apollo
+      - apollo:
+          context: pocket
+          requires:
+            - build
+          <<: *slack-fail-post-step
 
       - build:
           context: pocket
+          <<: *slack-fail-post-step
 
       # Try building the ECS docker image on each branch
       - pocket/docker_build:
@@ -302,6 +315,7 @@ workflows:
       - pocket/docker_build:
           <<: *only_main
           context: pocket
+          <<: *slack-fail-post-step
           name: build_docker_prod
           aws-access-key-id: Prod_AWS_ACCESS_KEY
           aws-secret-access-key: Prod_AWS_SECRET_ACCESS_KEY
@@ -318,6 +332,7 @@ workflows:
       - pocket/execute_codepipeline:
           <<: *only_main
           context: pocket
+          <<: *slack-fail-post-step
           name: deploy_prod
           environment: Prod
           aws-access-key-id: Prod_AWS_ACCESS_KEY
@@ -332,6 +347,7 @@ workflows:
       # Prod
       - pocket/setup_deploy_params:
           <<: *only_main
+          <<: *slack-fail-post-step
           name: setup-deploy-params-prod
           aws_access_key_id: Prod_AWS_ACCESS_KEY
           aws_secret_access_key: Prod_AWS_SECRET_ACCESS_KEY
