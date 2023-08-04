@@ -5,6 +5,7 @@ setup: false
 orbs:
   pocket: pocket/circleci-orbs@2.1.1
   aws-cli: circleci/aws-cli@3.1.5
+  slack: circleci/slack@4.12.5
 # the default pipeline parameters, which will be updated according to
 # the results of the path-filtering orb
 parameters:
@@ -35,6 +36,14 @@ only_dev: &only_dev
     branches:
       only:
         - dev
+        -
+# Use for notifying failure of step
+slack-fail-post-step: &slack-fail-post-step
+  post-steps:
+    - slack/notify:
+        branch_pattern: main
+        event: fail
+        template: basic_fail_1
 
 jobs:
   lambda:
@@ -180,6 +189,7 @@ workflows:
       # Build & Deploy Production Lambdas
       - lambda:
           <<: *only_main
+          <<: *slack-fail-post-step
           context: pocket
           name: deploy_lambda_events_prod
           env_lower_name: prod
