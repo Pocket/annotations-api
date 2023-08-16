@@ -23,8 +23,8 @@
   "license": "ISC",
   "homepage": "https://github.com/Pocket/annotations-api#readme",
   "dependencies": {
-    "@apollo/server": "4.9.0",
-    "@apollo/subgraph": "2.5.1",
+    "@apollo/server": "4.9.1",
+    "@apollo/subgraph": "2.5.2",
     "@aws-sdk/client-dynamodb": "3.379.1",
     "@aws-sdk/client-sqs": "3.379.1",
     "@aws-sdk/lib-dynamodb": "3.379.1",
