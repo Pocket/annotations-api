@@ -14,6 +14,7 @@ import { HighlightsDataService } from '../../dataservices/highlights';
 import { setTimeout } from 'timers/promises';
 import { failCallback } from '../routes/helper';
 import { serverLogger } from '../';
+import { SeverityLevel } from '@sentry/types';
 
 export type BatchDeleteMessage = {
   traceId: string;
@@ -156,7 +157,7 @@ export class BatchDeleteHandler {
       const receiveError = 'Error receiving messages from queue';
       serverLogger.error(receiveError, error);
       Sentry.addBreadcrumb({ message: receiveError });
-      Sentry.captureException(error, { level: Sentry.Severity.Critical });
+      Sentry.captureException(error, { level: 'fatal' as SeverityLevel });
     }
     // Process any messages received and schedule next poll
     if (body != null) {

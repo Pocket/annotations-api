@@ -4,6 +4,7 @@ import { BatchDeleteHandler, BatchDeleteMessage } from './batchDeleteHandler';
 import { DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { HighlightsDataService } from '../../dataservices/highlights';
 import * as Sentry from '@sentry/node';
+import { SeverityLevel } from '@sentry/types';
 import config from '../../config';
 import { serverLogger } from '../';
 
@@ -54,7 +55,7 @@ describe('batchDeleteHandler', () => {
     await batchDeleteHandler.pollQueue();
     expect(
       sentryStub.calledOnceWithExactly(error, {
-        level: Sentry.Severity.Critical,
+        level: 'fatal' as SeverityLevel,
       }),
     ).toBe(true);
     expect(serverLoggerStub.callCount).toEqual(1);
