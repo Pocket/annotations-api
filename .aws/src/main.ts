@@ -222,8 +222,9 @@ class AnnotationsAPI extends TerraformStack {
     return new PocketPagerDuty(this, 'pagerduty', {
       prefix: config.prefix,
       service: {
+        // This is a Tier 2 service and as such only raises non-critical alarms.
         criticalEscalationPolicyId: incidentManagement
-          .get('policy_default_critical_id')
+          .get('policy_default_non_critical_id')
           .toString(),
         nonCriticalEscalationPolicyId: incidentManagement
           .get('policy_default_non_critical_id')
