@@ -1,24 +1,22 @@
 version: '3.1'
 services:
   localstack:
-    image: localstack/localstack@sha256:6d8d18546a282d3d77ea0b986dd1ba19aa07b6e168d3faae2f5f149fa1bf3cd9
+    image: localstack/localstack@sha256:7246dbf02f0b70cf35b8ce64797020e4b104d6e62350986811bfc1d05a598626
     env_file:
       - .docker/local.env
     ports:
       - '4566:4566'
       - '8081:8081'
     volumes:
-      - ./.docker/localstack:/docker-entrypoint-initaws.d
+      - ./.docker/localstack:/etc/localstack/init/ready.d
     environment:
       - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
       - DEBUG=1
       - SERVICES=dynamodb
-      - DATA_DIR=/tmp/localstack/data
-      - DOCKER_HOST=unix:///var/run/docker.sock
-      - PORT_WEB_UI=8081
       - EXTRA_CORS_ALLOWED_HEADERS=Content-Disposition, Content-Type, x-amz-acl
       - EXTRA_CORS_EXPOSE_HEADERS=ETag
       - HOSTNAME_EXTERNAL=localstack
+
   mysql:
     image: mysql:5.7@sha256:bd873931ef20f30a5a9bf71498ce4e02c88cf48b2e8b782c337076d814deebde
     platform: linux/amd64
