@@ -4,7 +4,6 @@ import http from 'http';
 import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
-import { buildSubgraphSchema } from '@apollo/subgraph';
 import { errorHandler, sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
   ApolloServerPluginLandingPageDisabled,
@@ -16,8 +15,7 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { createApollo4QueryValidationPlugin } from 'graphql-constraint-directive/apollo4';
 
-import { typeDefs, schema } from './apollo';
-import { resolvers } from '../resolvers';
+import { schema } from './apollo';
 import config from '../config';
 import { getContext, IContext } from '../context';
 import queueDeleteRouter from './routes/queueDelete';
