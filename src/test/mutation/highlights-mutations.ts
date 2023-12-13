@@ -27,9 +27,21 @@ export const CREATE_HIGHLIGHTS_WITH_NOTE = gql`
     }
   }
 `;
-export const UPDATE_HIGHLIGHT = gql`
+export const UPDATE_HIGHLIGHT_DEPRECATED = gql`
   mutation updateSavedItemHighlight($id: ID!, $input: CreateHighlightInput!) {
     updateSavedItemHighlight(id: $id, input: $input) {
+      id
+      patch
+      version
+      quote
+      _createdAt
+      _updatedAt
+    }
+  }
+`;
+export const UPDATE_HIGHLIGHT = gql`
+  mutation updateSavedItemHighlight($id: ID!, $input: UpdateHighlightInput!) {
+    updateHighlight(id: $id, input: $input) {
       id
       patch
       version

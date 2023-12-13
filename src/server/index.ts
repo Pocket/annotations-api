@@ -4,7 +4,6 @@ import http from 'http';
 import cors from 'cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
-import { buildSubgraphSchema } from '@apollo/subgraph';
 import { errorHandler, sentryPlugin } from '@pocket-tools/apollo-utils';
 import {
   ApolloServerPluginLandingPageDisabled,
@@ -14,9 +13,9 @@ import {
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { createApollo4QueryValidationPlugin } from 'graphql-constraint-directive/apollo4';
 
-import typeDefs from '../typeDefs';
-import { resolvers } from '../resolvers';
+import { schema } from './apollo';
 import config from '../config';
 import { getContext, IContext } from '../context';
 import queueDeleteRouter from './routes/queueDelete';
@@ -54,6 +53,7 @@ export async function startServer(port: number): Promise<{
   const basePlugins = [
     sentryPlugin,
     ApolloServerPluginDrainHttpServer({ httpServer }),
+    createApollo4QueryValidationPlugin({ schema }),
   ];
   const prodPlugins = [
     ApolloServerPluginLandingPageDisabled(),
@@ -70,7 +70,7 @@ export async function startServer(port: number): Promise<{
       : basePlugins.concat(nonProdPlugins);
 
   const server = new ApolloServer<IContext>({
-    schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
+    schema,
     plugins,
     formatError: config.app.environment !== 'test' ? errorHandler : undefined,
   });

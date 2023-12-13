@@ -1,6 +1,11 @@
 import { Knex } from 'knex';
 import { IContext } from '../context';
-import { Highlight, HighlightEntity, HighlightInput } from '../types';
+import {
+  Highlight,
+  HighlightEntity,
+  HighlightInput,
+  HighlightUpdateInput,
+} from '../types';
 import { NotFoundError, UserInputError } from '@pocket-tools/apollo-utils';
 import { v4 as uuid } from 'uuid';
 import config from '../config';
@@ -169,7 +174,10 @@ export class HighlightsDataService {
    * @param id
    * @param input
    */
-  public async update(id: string, input: HighlightInput): Promise<void> {
+  public async update(
+    id: string,
+    input: HighlightInput | HighlightUpdateInput,
+  ): Promise<void> {
     const annotation = await this.getById(id);
 
     await this.writeDb.transaction(async (trx: Knex.Transaction) => {
@@ -317,10 +325,9 @@ export class HighlightsDataService {
    */
   private toDbEntity(
     input: HighlightInput,
-    id?: string,
   ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
     return {
-      annotation_id: id ?? uuid(),
+      annotation_id: input.id ?? uuid(),
       user_id: parseInt(this.userId),
       item_id: parseInt(input.itemId),
       quote: input.quote,

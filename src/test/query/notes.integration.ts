@@ -9,6 +9,7 @@ import { noteSeedCommand, GET_NOTES } from './notes-fixtures';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import config from '../../config';
+import { truncateTable } from '../utils';
 
 describe('Notes on a Highlight', () => {
   let app: Express.Application;
@@ -32,6 +33,7 @@ describe('Notes on a Highlight', () => {
     await Promise.all(
       Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
+    await truncateTable(config.dynamoDb.notesTable.name, client);
     await dynamodb.send(noteSeedCommand(now));
     ({ app, server, url: graphQLUrl } = await startServer(0));
   });
@@ -46,7 +48,7 @@ describe('Notes on a Highlight', () => {
       .set(headers)
       .send({ query: print(GET_NOTES), variables });
     const expectedHighlightWithNote = {
-      id: '1',
+      id: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
       note: {
         _createdAt: Math.round(now.getTime() / 1000),
         _updatedAt: Math.round(now.getTime() / 1000),

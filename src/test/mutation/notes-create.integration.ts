@@ -41,7 +41,7 @@ describe('Notes creation', () => {
 
     it('adds a note to an existing higlight', async () => {
       const variables: NoteInput = {
-        id: '3',
+        id: '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
         input: 'sweeter than a bucket full of strawberries',
       };
       const res = await request(app)
@@ -74,7 +74,7 @@ describe('Notes creation', () => {
 
     it('should throw an invalid permissions error', async () => {
       const variables: NoteInput = {
-        id: '3',
+        id: '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
         input: 'sweeter than a bucket full of strawberries',
       };
       const res = await request(app)
