@@ -101,6 +101,13 @@ Input for creating a new User-highlighted passage on a SavedItem.
 """
 input CreateHighlightInput {
   """
+  Optionally, a client-generated UUID to identify the highlight.
+  If one is not passed, it will be created. Must be in UUID format,
+  or will fail generation. Will not overwrite existing data if there
+  is an ID collision.
+  """
+  id: String @constraint(format: "uuid")
+  """
   The full text of the highlighted passage. Used as a fallback for
   rendering highlight if the patch fails.
   """

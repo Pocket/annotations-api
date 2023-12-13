@@ -317,10 +317,9 @@ export class HighlightsDataService {
    */
   private toDbEntity(
     input: HighlightInput,
-    id?: string,
   ): Omit<HighlightEntity, 'created_at' | 'updated_at'> {
     return {
-      annotation_id: id ?? uuid(),
+      annotation_id: input.id ?? uuid(),
       user_id: parseInt(this.userId),
       item_id: parseInt(input.itemId),
       quote: input.quote,

@@ -14,6 +14,7 @@ import { HighlightInput } from '../../types';
 import { UsersMeta } from '../../dataservices/usersMeta';
 import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
+import { v4 as uuid } from 'uuid';
 
 describe('Highlights creation', () => {
   let app: Express.Application;
@@ -78,6 +79,95 @@ describe('Highlights creation', () => {
       expect(typeof result[0]._updatedAt).toBe('number');
       expect(result[0]._createdAt).toBeTruthy();
       expect(result[0]._updatedAt).toBeTruthy();
+    });
+    it('should optionally accept a UUID passed from the client and use for the ID', async () => {
+      const id = uuid();
+      const variables: { input: HighlightInput[] } = {
+        input: [
+          {
+            id,
+            itemId: '3',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+          },
+        ],
+      };
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      const result = res.body.data?.createSavedItemHighlights;
+
+      // Check the whole object and its fields
+      const expectedHighlight = {
+        id,
+        version: 2,
+        patch: 'Prow scuttle parrel',
+        quote: 'provost Sail ho shrouds spirits boom',
+      };
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(expect.objectContaining(expectedHighlight));
+    });
+    it('does not accept input with non-uuid ID strings', async () => {
+      const variables: { input: HighlightInput[] } = {
+        input: [
+          {
+            id: 'abc-234',
+            itemId: '3',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'provost Sail ho shrouds spirits boom',
+          },
+        ],
+      };
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      const result = res.body.errors;
+      expect(result.length).toBe(1);
+      expect(result[0].extensions.code).toBe('BAD_USER_INPUT');
+    });
+    it('should not overrwrite an existing highlight', async () => {
+      const seed = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({
+          query: print(CREATE_HIGHLIGHTS),
+          variables: {
+            input: [
+              {
+                id: uuid(),
+                itemId: '1',
+                version: 2,
+                patch: 'Prow scuttle parrel',
+                quote: 'provost Sail ho shrouds spirits boom',
+              },
+            ],
+          },
+        });
+      const seedResult = seed.body.data?.createSavedItemHighlights;
+      expect(seedResult.length).toEqual(1);
+      const id = seedResult[0].id;
+      const variables = {
+        input: [
+          {
+            id,
+            itemId: '1',
+            version: 2,
+            patch: 'Prow scuttle parrel',
+            quote: 'Bring a spring upon her cable holystone',
+          },
+        ],
+      };
+      const res = await request(app)
+        .post(graphQLUrl)
+        .set(headers)
+        .send({ query: print(CREATE_HIGHLIGHTS), variables });
+      const result = res.body.errors;
+      expect(result.length).toBe(1);
+      expect(result[0].extensions.code).toBe('INTERNAL_SERVER_ERROR');
     });
     it('should create a highlight on a SavedItem with existing highlights', async () => {
       const variables: { input: HighlightInput[] } = {

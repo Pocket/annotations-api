@@ -48,6 +48,7 @@ export type SavedItem = {
 };
 
 export type HighlightInput = {
+  id?: string;
   quote: string;
   patch: string;
   version: number;
