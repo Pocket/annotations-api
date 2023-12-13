@@ -54,14 +54,16 @@ describe('Notes delete', () => {
       expect(res.body.errors?.[0].message).toContain('Not Found');
     });
     it('deletes a note on a highlight that has a note', async () => {
-      const variables = { id: '1' };
+      const variables = { id: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b' };
       const res = await request(app)
         .post(graphQLUrl)
         .set(headers)
         .send({ query: print(DELETE_NOTE), variables });
       const result = res.body.data?.deleteSavedItemHighlightNote;
-      expect(result).toEqual('1');
-      const dbRecord = await new NotesDataService(client, '1').get('1');
+      expect(result).toEqual('b3a95dd3-dd9b-49b0-bb72-dc6daabd809b');
+      const dbRecord = await new NotesDataService(client, '1').get(
+        'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
+      );
       expect(dbRecord).toBeNull();
     });
     it('returns NOT_FOUND if the highlight does not exist', async () => {
@@ -81,7 +83,7 @@ describe('Notes delete', () => {
 
     it('should throw an invalid permissions error', async () => {
       const variables = {
-        id: '3',
+        id: '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
       };
       const res = await request(app)
         .post(graphQLUrl)

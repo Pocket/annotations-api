@@ -56,6 +56,8 @@ export type HighlightInput = {
   note?: string;
 };
 
+export type HighlightUpdateInput = Omit<HighlightInput, 'id'>;
+
 export type NoteInput = {
   id: string;
   input: string;

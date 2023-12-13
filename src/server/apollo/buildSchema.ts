@@ -10,5 +10,4 @@ const filePath = path.resolve(
   'dist/../../..',
   'schema-generated.graphql',
 );
-console.log(filePath);
 fs.writeFileSync(filePath, sdl);

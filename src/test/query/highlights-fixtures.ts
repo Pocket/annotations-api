@@ -1,5 +1,4 @@
 import { gql } from 'graphql-tag';
-import { v4 as uuid } from 'uuid';
 
 export const GET_HIGHLIGHTS = gql`
   query GetHighlights($itemId: ID) {
@@ -23,7 +22,7 @@ export const seedData = (now) => ({
   user_annotations: [
     {
       // One highlight on an item
-      annotation_id: uuid(),
+      annotation_id: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
       user_id: 1,
       item_id: 1,
       quote: "'We should rewrite it all,' said Pham.",
@@ -35,7 +34,7 @@ export const seedData = (now) => ({
     },
     {
       // > 1 annotations on an item
-      annotation_id: uuid(),
+      annotation_id: 'aafa87bc-9742-416c-a517-e3cd801f2761',
       user_id: 1,
       item_id: 2,
       quote:
@@ -47,7 +46,7 @@ export const seedData = (now) => ({
       created_at: now,
     },
     {
-      annotation_id: uuid(),
+      annotation_id: '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
       user_id: 1,
       item_id: 2,
       quote: "The word for all this is 'mature programming environment.'",
@@ -58,7 +57,7 @@ export const seedData = (now) => ({
       created_at: now,
     },
     {
-      annotation_id: uuid(),
+      annotation_id: 'ec9b0dbd-ebd7-43fd-b296-083bac8fc1a6',
       user_id: 1,
       item_id: 2,
       quote:

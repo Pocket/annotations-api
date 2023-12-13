@@ -35,7 +35,7 @@ describe('Highlights on a SavedItem', () => {
       .set(headers)
       .send({ query: print(GET_HIGHLIGHTS), variables });
     const expectedAnnotation = {
-      id: '1',
+      id: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
       quote: "'We should rewrite it all,' said Pham.",
       patch: 'patch1',
       version: 1,

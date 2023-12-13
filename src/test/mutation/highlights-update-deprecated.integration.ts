@@ -6,8 +6,8 @@ import { print } from 'graphql';
 import { IContext } from '../../context';
 import { readClient } from '../../database/client';
 import { seedData } from '../query/highlights-fixtures';
-import { UPDATE_HIGHLIGHT } from './highlights-mutations';
-import { HighlightEntity, HighlightUpdateInput } from '../../types';
+import { UPDATE_HIGHLIGHT_DEPRECATED } from './highlights-mutations';
+import { HighlightEntity, HighlightInput } from '../../types';
 import { UsersMeta } from '../../dataservices/usersMeta';
 import { mysqlTimeString } from '../../dataservices/utils';
 import config from '../../config';
@@ -51,14 +51,14 @@ describe('Highlights update', () => {
       quote: 'provost Sail ho shrouds spirits boom',
     };
     const id = 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b';
-    const variables: { id: string; input: HighlightUpdateInput } = {
+    const variables: { id: string; input: HighlightInput } = {
       id,
       input,
     };
     const res = await request(app)
       .post(graphQLUrl)
       .set(headers)
-      .send({ query: print(UPDATE_HIGHLIGHT), variables });
+      .send({ query: print(UPDATE_HIGHLIGHT_DEPRECATED), variables });
     const usersMetaRecord = await db('users_meta')
       .where({ user_id: '1', property: UsersMeta.propertiesMap.account })
       .pluck('value');
@@ -66,11 +66,13 @@ describe('Highlights update', () => {
       .where({ user_id: '1', item_id: '1' })
       .pluck('time_updated');
 
-    expect(res.body.data?.updateHighlight).toBeTruthy();
-    expect(res.body.data?.updateHighlight.patch).toEqual(input.patch);
-    expect(res.body.data?.updateHighlight.quote).toEqual(input.quote);
-    expect(res.body.data?.updateHighlight.version).toEqual(input.version);
-    expect(res.body.data?.updateHighlight.id).toEqual(id);
+    expect(res.body.data?.updateSavedItemHighlight).toBeTruthy();
+    expect(res.body.data?.updateSavedItemHighlight.patch).toEqual(input.patch);
+    expect(res.body.data?.updateSavedItemHighlight.quote).toEqual(input.quote);
+    expect(res.body.data?.updateSavedItemHighlight.version).toEqual(
+      input.version,
+    );
+    expect(res.body.data?.updateSavedItemHighlight.id).toEqual(id);
     expect(usersMetaRecord[0]).toEqual(
       mysqlTimeString(updateDate, config.database.tz),
     );
@@ -81,7 +83,7 @@ describe('Highlights update', () => {
     clock.restore();
   });
   it('should throw a NOT_FOUND error if the annotation_id does not exist', async () => {
-    const variables: { id: string; input: HighlightUpdateInput } = {
+    const variables: { id: string; input: HighlightInput } = {
       id: '999',
       input: {
         itemId: '1',
@@ -93,7 +95,7 @@ describe('Highlights update', () => {
     const res = await request(app)
       .post(graphQLUrl)
       .set(headers)
-      .send({ query: print(UPDATE_HIGHLIGHT), variables });
+      .send({ query: print(UPDATE_HIGHLIGHT_DEPRECATED), variables });
     expect(res.body.errors?.[0]?.message).toContain(
       'Error - Not Found: No annotation found for the given ID',
     );
@@ -102,7 +104,7 @@ describe('Highlights update', () => {
   });
   it('should throw a NOT_FOUND error if the annotation_id is not owned by the user, and not update', async () => {
     await db('user_annotations').insert({
-      annotation_id: '05347f61-8fee-4e54-8cd6-618b02c39c73',
+      annotation_id: 55,
       user_id: 2,
       item_id: 2,
       patch: 'Prow scuttle parrel',
@@ -112,8 +114,8 @@ describe('Highlights update', () => {
       updated_at: now,
       created_at: now,
     });
-    const variables: { id: string; input: HighlightUpdateInput } = {
-      id: '05347f61-8fee-4e54-8cd6-618b02c39c73',
+    const variables: { id: string; input: HighlightInput } = {
+      id: '55',
       input: {
         itemId: '2',
         version: 2,
@@ -124,7 +126,7 @@ describe('Highlights update', () => {
     const res = await request(app)
       .post(graphQLUrl)
       .set(headers)
-      .send({ query: print(UPDATE_HIGHLIGHT), variables });
+      .send({ query: print(UPDATE_HIGHLIGHT_DEPRECATED), variables });
     const dbRow = await db<HighlightEntity>('user_annotations')
       .select()
       .where('annotation_id', variables.id);
