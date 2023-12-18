@@ -50,7 +50,7 @@ describe('Highlights deletion', () => {
       shouldAdvanceTime: false,
     });
 
-    const variables = { id: '1' };
+    const variables = { id: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b' };
     const res = await request(app)
       .post(graphQLUrl)
       .set(headers)

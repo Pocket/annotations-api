@@ -12,6 +12,7 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import config from '../../config';
 import { noteSeedCommand } from '../query/notes-fixtures';
 import { NotesDataService } from '../../dataservices/notes';
+import { truncateTable } from '../utils';
 
 describe('Notes update', () => {
   let app: Express.Application;
@@ -36,6 +37,7 @@ describe('Notes update', () => {
     await Promise.all(
       Object.entries(testData).map(([table, data]) => db(table).insert(data)),
     );
+    await truncateTable(config.dynamoDb.notesTable.name, client);
     await dynamodb.send(noteSeedCommand(now));
   });
   afterAll(async () => {
@@ -46,7 +48,7 @@ describe('Notes update', () => {
 
     it('adds a note to an existing higlight without any notes', async () => {
       const variables: NoteInput = {
-        id: '3',
+        id: '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
         input: 'sweeter than a bucket full of strawberries',
       };
       const res = await request(app)
@@ -61,7 +63,7 @@ describe('Notes update', () => {
     });
     it('updates a note on an existing higlight that already has a note', async () => {
       const variables: NoteInput = {
-        id: '1',
+        id: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
         input: 'sweeter than a bucket full of strawberries',
       };
       const res = await request(app)
@@ -73,7 +75,9 @@ describe('Notes update', () => {
         text: 'sweeter than a bucket full of strawberries',
       };
       expect(result).toEqual(expect.objectContaining(expectedHighlight));
-      const dbRecord = await new NotesDataService(dynamoClient(), '1').get('1');
+      const dbRecord = await new NotesDataService(dynamoClient(), '1').get(
+        'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
+      );
       expect(dbRecord?.text).toEqual(
         'sweeter than a bucket full of strawberries',
       );
@@ -98,7 +102,7 @@ describe('Notes update', () => {
 
     it('should throw an invalid permissions error', async () => {
       const variables: NoteInput = {
-        id: '3',
+        id: '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
         input: 'sweeter than a bucket full of strawberries',
       };
       const res = await request(app)

@@ -35,7 +35,12 @@ describe('clearUserData for Highlights data', () => {
       apiId: '123',
     });
     await highlightService.deleteByAnnotationIds(
-      ['1', '2', '3', '4'],
+      [
+        'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
+        'aafa87bc-9742-416c-a517-e3cd801f2761',
+        '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
+        'ec9b0dbd-ebd7-43fd-b296-083bac8fc1a6',
+      ],
       'requestId',
     );
     const res = await db('user_annotations')
@@ -58,7 +63,12 @@ describe('clearUserData for Highlights data', () => {
       .where('user_id', randomId)
       .pluck('user_id');
     await highlightService.deleteByAnnotationIds(
-      ['1', '2', '3', '4'],
+      [
+        'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
+        'aafa87bc-9742-416c-a517-e3cd801f2761',
+        '29de0654-a2ab-4df3-afc2-3d0d8d29ecbe',
+        'ec9b0dbd-ebd7-43fd-b296-083bac8fc1a6',
+      ],
       'requestId',
     );
     expect(res.length).toEqual(0);

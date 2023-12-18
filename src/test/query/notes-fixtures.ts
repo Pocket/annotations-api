@@ -27,7 +27,7 @@ export const noteSeedCommand = (now: Date): PutCommand => {
   return new PutCommand({
     TableName: config.dynamoDb.notesTable.name,
     Item: {
-      [config.dynamoDb.notesTable.key]: '1',
+      [config.dynamoDb.notesTable.key]: 'b3a95dd3-dd9b-49b0-bb72-dc6daabd809b',
       [config.dynamoDb.notesTable.note]: `there you have it, that's great`,
       [config.dynamoDb.notesTable._createdAt]: ms,
       [config.dynamoDb.notesTable._updatedAt]: ms,

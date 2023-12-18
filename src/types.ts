@@ -48,12 +48,15 @@ export type SavedItem = {
 };
 
 export type HighlightInput = {
+  id?: string;
   quote: string;
   patch: string;
   version: number;
   itemId: string;
   note?: string;
 };
+
+export type HighlightUpdateInput = Omit<HighlightInput, 'id'>;
 
 export type NoteInput = {
   id: string;
