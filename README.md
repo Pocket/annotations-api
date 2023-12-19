@@ -1,5 +1,8 @@
 # Annotations API
 
+> [!IMPORTANT]  
+> This repo has been moved to [Pocket's Monorepo](https://github.com/Pocket/pocket-monorepo)
+
 This subgraph handles Annotations on SavedItems in a User's list.
 
 ## Folder structure
