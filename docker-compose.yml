@@ -18,7 +18,7 @@ services:
       - HOSTNAME_EXTERNAL=localstack
 
   mysql:
-    image: mysql:5.7@sha256:bd873931ef20f30a5a9bf71498ce4e02c88cf48b2e8b782c337076d814deebde
+    image: mysql:8.0
     platform: linux/amd64
     ports:
       - '3306:3306'
@@ -27,6 +27,12 @@ services:
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
       - TZ=US/Central
+    command:
+      - mysqld
+      - --sql_mode=NO_ENGINE_SUBSTITUTION
+      - --character-set-server=UTF8MB3
+      - --collation-server=utf8_unicode_ci
+      - --default_authentication_plugin=mysql_native_password
 
   redis:
     image: redis:latest@sha256:f9724694a0b97288d2255ff2b69642dfba7f34c8e41aaf0a59d33d10d8a42687

@@ -2,6 +2,9 @@ CREATE DATABASE IF NOT EXISTS `readitla_ril-tmp`;
 
 USE `readitla_ril-tmp`;
 
+
+SET GLOBAL explicit_defaults_for_timestamp = 0;
+
 -- these are highlights
 CREATE TABLE `user_annotations` (
   `annotation_id` varchar(50) COLLATE utf8mb4_bin NOT NULL,
